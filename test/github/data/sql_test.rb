@@ -18,19 +18,19 @@ class GitHub::Data::SQLTest < Minitest::Test
     foo = GitHub::Data::SQL::LITERAL "foo"
     rows = GitHub::Data::SQL::ROWS [[1, 2], [3, 4]]
     SANITIZE_TESTS = [
-      [GitHub::Data::SQL,  "'GitHub::Data::SQL'"],
-      [DateTime.now.utc,   "'1970-01-01 00:00:00'"],
-      [Time.now.utc,       "'1970-01-01 00:00:00'"],
+      [GitHub::Data::SQL,    "'GitHub::Data::SQL'"],
+      [DateTime.now.utc,     "'1970-01-01 00:00:00'"],
+      [Time.now.utc,         "'1970-01-01 00:00:00'"],
       [Time.now.utc.to_date, "'1970-01-01'"],
-      [true,               "1"],
-      [false,              "0"],
-      [17,                 "17"],
-      [1.7,                "1.7"],
-      ["corge",            "'corge'"],
-      [:frumple,           "'frumple'"],
-      [foo,                "foo"],
-      [[1, 2],             "(1, 2)"],
-      [rows,               "(1, 2), (3, 4)"], # bulk inserts
+      [true,                 "1"],
+      [false,                "0"],
+      [17,                   "17"],
+      [1.7,                  "1.7"],
+      ["corge",              "'corge'"],
+      [:frumple,             "'frumple'"],
+      [foo,                  "foo"],
+      [[1, 2],               "(1, 2)"],
+      [rows,                 "(1, 2), (3, 4)"], # bulk inserts
     ]
 
     BAD_VALUE_TESTS = [
