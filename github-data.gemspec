@@ -36,6 +36,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "timecop", "~> 0.8.1"
   spec.add_development_dependency "activerecord", "~> 5.0"
   spec.add_development_dependency "activesupport"
-  spec.add_development_dependency "activerecord-mysql2-adapter"
-  spec.add_development_dependency "mysql2", "~> 0.3.10"
+  spec.add_development_dependency "mysql2"
+  spec.add_development_dependency "activerecord-mysql-adapter"
 end
