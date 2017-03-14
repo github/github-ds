@@ -184,22 +184,29 @@ class GitHub::Data::SQLTest < Minitest::Test
   end
 
   test "affected_rows returns the affected row count" do
-    GitHub::Data::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
-    GitHub::Data::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2), (3), (4)")
-    sql = GitHub::Data::SQL.new("UPDATE affected_rows_test SET x = x + 1")
-    sql.run
+    begin
+      GitHub::Data::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
+      GitHub::Data::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2), (3), (4)")
 
-    assert_equal 4, sql.affected_rows
-    GitHub::Data::SQL.run("DROP TABLE affected_rows_test")
+      sql = GitHub::Data::SQL.new("UPDATE affected_rows_test SET x = x + 1")
+      sql.run
+
+      assert_equal 4, sql.affected_rows
+    ensure
+      GitHub::Data::SQL.run("DROP TABLE affected_rows_test")
+    end
   end
 
   test "affected_rows returns the affected row count even when the query generates warnings" do
-    GitHub::Data::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
-    GitHub::Data::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2), (3), (4)")
-    sql = GitHub::Data::SQL.new("UPDATE affected_rows_test SET x = x + 1 WHERE 1 = '1x'")
-    sql.run
+    begin
+      GitHub::Data::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
+      GitHub::Data::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2), (3), (4)")
+      sql = GitHub::Data::SQL.new("UPDATE affected_rows_test SET x = x + 1 WHERE 1 = '1x'")
+      sql.run
 
-    assert_equal 4, sql.affected_rows
-    GitHub::Data::SQL.run("DROP TABLE affected_rows_test")
+      assert_equal 4, sql.affected_rows
+    ensure
+      GitHub::Data::SQL.run("DROP TABLE affected_rows_test")
+    end
   end
 end
