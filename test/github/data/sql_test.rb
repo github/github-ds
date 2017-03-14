@@ -12,7 +12,7 @@ class GitHub::Data::SQLTest < Minitest::Test
     define_method("test_#{name.gsub(/\W/, '_')}", &block)
   end
 
-  local_time = Time.new(1970, 1, 1, 0, 0, 0)
+  local_time = Time.utc(1970, 1, 1, 0, 0, 0)
 
   Timecop.freeze(local_time) do
     foo = GitHub::Data::SQL::LITERAL "foo"
@@ -114,8 +114,12 @@ class GitHub::Data::SQLTest < Minitest::Test
   test "add sql date without force_timezone" do
     sql = GitHub::Data::SQL.new ":now", :now => Time.now.utc
     parsed = Time.parse(sql.query[1..-2]) # leave out leading and ending single quotes
-    now = Time.now
-    assert_in_delta now.to_i, parsed.to_i, 3, "#{now.inspect} expected, #{parsed.inspect} actual"
+
+    # Time.parse assumes local time
+    # so this creates a local time using the properties from the current time in UTC
+    utc = Time.now.utc
+    utc_now = Time.local(utc.year, utc.month, utc.day, utc.hour, utc.min, utc.sec)
+    assert_in_delta utc_now.to_i, parsed.to_i, 3, "#{utc_now.inspect} expected, #{parsed.inspect} actual"
   end
 
   test "add sql date with force_timezone" do
