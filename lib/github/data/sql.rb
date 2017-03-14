@@ -69,7 +69,7 @@ module GitHub
       #
       # WARNING: The given value is LITERALLY inserted into your SQL without being
       # escaped, so use this with extreme caution.
-      def self.LITERAL(string) # rubocop:disable Style/MethodName
+      def self.LITERAL(string)
         Literal.new(string)
       end
 
@@ -77,7 +77,7 @@ module GitHub
       #
       # Used when a column contains binary data which needs to be escaped
       # to prevent warnings from MySQL
-      def self.BINARY(string) # rubocop:disable Style/MethodName
+      def self.BINARY(string)
         GitHub::Data::SQL.LITERAL(GitHub::Data::SQL.BINARY_LITERAL(string))
       end
 
@@ -85,12 +85,12 @@ module GitHub
       # a literal in SQL
       #
       # Performs the core escaping logic for binary strings in MySQL
-      def self.BINARY_LITERAL(string) # rubocop:disable Style/MethodName
+      def self.BINARY_LITERAL(string)
         "x'#{string.unpack("H*")[0]}'"
       end
 
       # Public: Instantiate a list of Arrays of SQL values for insertion.
-      def self.ROWS(rows) # rubocop:disable Style/MethodName
+      def self.ROWS(rows)
         Rows.new(rows)
       end
 
