@@ -1,10 +1,6 @@
 require "test_helper"
 
 class GitHub::Data::SQLTest < Minitest::Test
-  def self.test(name, &block)
-    define_method("test_#{name.gsub(/\W/, '_')}", &block)
-  end
-
   local_time = Time.utc(1970, 1, 1, 0, 0, 0)
 
   Timecop.freeze(local_time) do
@@ -36,21 +32,22 @@ class GitHub::Data::SQLTest < Minitest::Test
     ]
   end
 
-  SANITIZE_TESTS.each do |input, expected|
-    test "#{input.inspect} sanitizes as #{expected.inspect}" do
-      assert_equal expected, GitHub::Data::SQL.new.sanitize(input)
+  def test_sanitize
+    SANITIZE_TESTS.each do |input, expected|
+      assert_equal expected, GitHub::Data::SQL.new.sanitize(input),
+      "#{input.inspect} sanitizes as #{expected.inspect}"
     end
   end
 
-  BAD_VALUE_TESTS.each do |input|
-    test "#{input.inspect} (#{input.class}) raises BadValue when sanitized" do
-      assert_raises GitHub::Data::SQL::BadValue do
+  def test_sanitize_bad_values
+    BAD_VALUE_TESTS.each do |input|
+      assert_raises GitHub::Data::SQL::BadValue, "#{input.inspect} (#{input.class}) raises BadValue when sanitized" do
         GitHub::Data::SQL.new.sanitize input
       end
     end
   end
 
-  test "initialize with SQL string" do
+  def test_initialize_with_query
     str = "query"
     sql = GitHub::Data::SQL.new str
 
@@ -59,7 +56,7 @@ class GitHub::Data::SQLTest < Minitest::Test
     refute_same sql.query, str
   end
 
-  test "initialize with binds" do
+  def test_initialize_with_binds
     binds = { :key => "value" }
     sql = GitHub::Data::SQL.new binds
 
@@ -68,27 +65,27 @@ class GitHub::Data::SQLTest < Minitest::Test
     refute_same sql.binds, binds
   end
 
-  test "initialize with query and binds" do
+  def test_initialize_with_query_and_binds
     sql = GitHub::Data::SQL.new "query :key", :key => "value"
 
     assert_equal "query 'value'", sql.query
     assert_equal "value", sql.binds[:key]
   end
 
-  test "initialize with single-character binds" do
+  def test_initialize_with_single_character_binds
     sql = GitHub::Data::SQL.new "query :x", :x => "y"
     assert_equal "query 'y'", sql.query
     assert_equal "y", sql.binds[:x]
   end
 
-  test "add SQL" do
+  def test_add
     sql = GitHub::Data::SQL.new
 
     sql.add("first").add "second"
     assert_equal "first second", sql.query
   end
 
-  test "add SQL with local binds" do
+  def test_add_with_binds
     sql = GitHub::Data::SQL.new
 
     sql.add ":local", :local => "value"
@@ -99,18 +96,18 @@ class GitHub::Data::SQLTest < Minitest::Test
     end
   end
 
-  test "add SQL with leading and trailing whitespace" do
+  def test_add_with_leading_and_trailing_whitespace
     sql = GitHub::Data::SQL.new " query "
     assert_equal "query", sql.query
   end
 
-  test "add sql date" do
+  def test_add_date
     now = Time.now.utc
     sql = GitHub::Data::SQL.new ":now", :now => now
     assert_equal "'#{now.to_s(:db)}'", sql.query
   end
 
-  test "set some bind params" do
+  def test_bind
     sql = GitHub::Data::SQL.new
     sql.bind(:first => "firstval").bind(:second => "secondval")
 
@@ -118,14 +115,14 @@ class GitHub::Data::SQLTest < Minitest::Test
     assert_equal "secondval", sql.binds[:second]
   end
 
-  test "provide a custom connection" do
+  def test_initialize_with_connection
     sql = GitHub::Data::SQL.new :connection => "stub"
 
     assert_equal "stub", sql.connection
     assert_nil sql.binds[:connection]
   end
 
-  test "uses the AR query cache when SELECTing" do
+  def test_uses_ar_query_cache_when_selecting
     first, second = nil
 
     ActiveRecord::Base.cache do
@@ -136,35 +133,35 @@ class GitHub::Data::SQLTest < Minitest::Test
     assert_in_delta first, second
   end
 
-  test "add_unless_empty adds to a non-empty query" do
+  def test_add_unless_empty_adds_to_a_non_empty_query
     sql = GitHub::Data::SQL.new "non-empty"
     sql.add_unless_empty "foo"
 
     assert_includes sql.query, "foo"
   end
 
-  test "add_unless_empty does not add to an empty query" do
+  def test_add_unless_empty_does_not_add_to_an_empty_query
     sql = GitHub::Data::SQL.new
     sql.add_unless_empty "foo"
 
     refute_includes sql.query, "foo"
   end
 
-  test "LITERAL returns a Literal" do
+  def test_literal
     assert_kind_of GitHub::Data::SQL::Literal, GitHub::Data::SQL::LITERAL("foo")
   end
 
-  test "ROWS returns a GitHub::Data::SQL::Rows instance" do
+  def test_rows
     assert_kind_of GitHub::Data::SQL::Rows, GitHub::Data::SQL::ROWS([[1, 2, 3], [4, 5, 6]])
   end
 
-  test "ROWS raises if non-arrays are provided" do
+  def test_rows_raises_if_non_arrays_are_provided
     assert_raises(ArgumentError) do
       GitHub::Data::SQL::ROWS([1, 2, 3])
     end
   end
 
-  test "affected_rows returns the affected row count" do
+  def test_affected_rows
     begin
       GitHub::Data::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
       GitHub::Data::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2), (3), (4)")
@@ -178,7 +175,7 @@ class GitHub::Data::SQLTest < Minitest::Test
     end
   end
 
-  test "affected_rows returns the affected row count even when the query generates warnings" do
+  def test_affected_rows_even_when_query_generates_warning
     begin
       GitHub::Data::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
       GitHub::Data::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2), (3), (4)")
