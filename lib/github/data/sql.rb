@@ -140,6 +140,7 @@ module GitHub
           query = nil
         end
 
+        @affected_rows  = nil
         @binds      = binds ? binds.dup : {}
         @query      = ""
         @connection = @binds.delete :connection
