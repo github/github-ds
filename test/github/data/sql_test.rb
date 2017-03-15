@@ -1,6 +1,7 @@
 require "test_helper"
 require "timecop"
 
+Time.zone = "UTC"
 ActiveRecord::Migration.verbose = false
 ActiveRecord::Base.establish_connection({
   adapter: "mysql2",
@@ -111,26 +112,10 @@ class GitHub::Data::SQLTest < Minitest::Test
     assert_equal "query", sql.query
   end
 
-  test "add sql date without force_timezone" do
-    sql = GitHub::Data::SQL.new ":now", :now => Time.now.utc
-    parsed = Time.parse(sql.query[1..-2]) # leave out leading and ending single quotes
-
-    # Time.parse assumes local time
-    # so this creates a local time using the properties from the current time in UTC
-    utc = Time.now.utc
-    utc_now = Time.local(utc.year, utc.month, utc.day, utc.hour, utc.min, utc.sec)
-    assert_in_delta utc_now.to_i, parsed.to_i, 3, "#{utc_now.inspect} expected, #{parsed.inspect} actual"
-  end
-
-  test "add sql date with force_timezone" do
-    sql = GitHub::Data::SQL.new ":now", :now => Time.now.utc, :force_timezone => :utc
-    parsed = Time.parse(sql.query[1..-2]) # leave out leading and ending single quotes
-
-    # Time.parse assumes local time
-    # so this creates a local time using the properties from the current time in UTC
-    utc = Time.now.utc
-    utc_now = Time.local(utc.year, utc.month, utc.day, utc.hour, utc.min, utc.sec)
-    assert_in_delta utc_now.to_i, parsed.to_i, 3, "#{utc_now.inspect} expected, #{parsed.inspect} actual"
+  test "add sql date" do
+    now = Time.now.utc
+    sql = GitHub::Data::SQL.new ":now", :now => now
+    assert_equal "'#{now.to_s(:db)}'", sql.query
   end
 
   test "set some bind params" do
