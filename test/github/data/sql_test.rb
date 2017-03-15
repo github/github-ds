@@ -1,11 +1,4 @@
 require "test_helper"
-require "timecop"
-
-ActiveRecord::Migration.verbose = false
-ActiveRecord::Base.establish_connection({
-  adapter: "mysql2",
-  database: "github_data_test",
-})
 
 class GitHub::Data::SQLTest < Minitest::Test
   def self.test(name, &block)
