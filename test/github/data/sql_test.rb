@@ -1,7 +1,6 @@
 require "test_helper"
 require "timecop"
 
-Time.zone = "UTC"
 ActiveRecord::Migration.verbose = false
 ActiveRecord::Base.establish_connection({
   adapter: "mysql2",
