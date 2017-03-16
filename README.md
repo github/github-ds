@@ -1,9 +1,10 @@
 # Github::KV
 
-`GitHub::KV` is a key/value data store backed by MySQL, built on top of `GitHub::KV::SQL` and `GitHub::KV::Result`, each of which are useful on their own apart from KV.
+`GitHub::KV` is a key/value data store backed by MySQL and written in Ruby using `GitHub::KV::SQL` and `GitHub::KV::Result`.
 
-* `GitHub::KV::SQL` is for building and executing a SQL query. This class uses ActiveRecord's connection class, but provides a better API for bind values and raw data access.
-* `GitHub::KV::Result` makes it easier to bake in resiliency through the use of a Result object instead of raising exceptions.
+`GitHub::KV::SQL` is for building and executing a SQL query. This class uses ActiveRecord's connection class, but provides a better API for bind values and raw data access.
+
+`GitHub::KV::Result` makes it easier to bake in resiliency through the use of a Result object instead of raising exceptions.
 
 ## Installation
 
