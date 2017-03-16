@@ -1,6 +1,6 @@
 require 'rails/generators/active_record'
 
-module GitHub
+module Github
   module Data
     module Generators
       class ActiveRecordGenerator < ::Rails::Generators::Base

@@ -6,7 +6,7 @@ require "rails/generators/test_case"
 require "generators/github/data/active_record_generator"
 
 class GitHubDataActiveRecordGeneratorTest < Rails::Generators::TestCase
-  tests GitHub::Data::Generators::ActiveRecordGenerator
+  tests Github::Data::Generators::ActiveRecordGenerator
   destination File.expand_path("../../../../tmp", __FILE__)
   setup :prepare_destination
 
