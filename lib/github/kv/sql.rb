@@ -2,14 +2,14 @@ require "active_record"
 require "active_support/all"
 
 module GitHub
-  module Data
+  class KV
     # Public: Build and execute a SQL query, returning results as Arrays. This
     # class uses ActiveRecord's connection classes, but provides a better API for
     # bind values and raw data access.
     #
     # Example:
     #
-    #   sql = GitHub::Data::SQL.new(<<-SQL, :parent_ids => parent_ids, :network_id => network_id)
+    #   sql = GitHub::KV::SQL.new(<<-SQL, :parent_ids => parent_ids, :network_id => network_id)
     #     SELECT * FROM repositories
     #     WHERE source_id = :network_id AND parent_id IN :parent_ids
     #   SQL
@@ -30,7 +30,7 @@ module GitHub
     #
     # * Arrays are escaped as `(item, item, item)`. If you need to insert multiple
     #   rows (Arrays of Arrays), you must specify the bind value using
-    #   GitHub::Data::SQL::ROWS(array_of_arrays).
+    #   GitHub::KV::SQL::ROWS(array_of_arrays).
     #
     class SQL
 
@@ -78,7 +78,7 @@ module GitHub
       # Used when a column contains binary data which needs to be escaped
       # to prevent warnings from MySQL
       def self.BINARY(string)
-        GitHub::Data::SQL.LITERAL(GitHub::Data::SQL.BINARY_LITERAL(string))
+        GitHub::KV::SQL.LITERAL(GitHub::KV::SQL.BINARY_LITERAL(string))
       end
 
       # Public: Escape a binary SQL value, yielding a string which can be used as
@@ -158,7 +158,7 @@ module GitHub
       #          aren't available to subsequent adds.
       #
       # Returns self.
-      # Raises GitHub::Data::SQL::BadBind for unknown keyword tokens.
+      # Raises GitHub::KV::SQL::BadBind for unknown keyword tokens.
       def add(sql, extras = nil)
         return self if sql.blank?
 
@@ -186,7 +186,7 @@ module GitHub
       #          aren't available to subsequent adds.
       #
       # Returns self.
-      # Raises GitHub::Data::SQL::BadBind for unknown keyword tokens.
+      # Raises GitHub::KV::SQL::BadBind for unknown keyword tokens.
       def add_unless_empty(sql, extras = nil)
         return self if query.empty?
         add sql, extras
@@ -315,8 +315,8 @@ module GitHub
       # Public: Execute, ignoring results. This is useful when the results of a
       # query aren't important, often INSERTs, UPDATEs, or DELETEs.
       #
-      # sql    - An optional SQL string. See GitHub::Data::SQL#add for details.
-      # extras - Optional bind values. See GitHub::Data::SQL#add for details.
+      # sql    - An optional SQL string. See GitHub::KV::SQL#add for details.
+      # extras - Optional bind values. See GitHub::KV::SQL#add for details.
       #
       # Returns self.
       def run(sql = nil, extras = nil)
@@ -337,8 +337,8 @@ module GitHub
 
       # Public: Create and execute a new SQL query, ignoring results.
       #
-      # sql      - A SQL string. See GitHub::Data::SQL#add for details.
-      # bindings - Optional bind values. See GitHub::Data::SQL#add for details.
+      # sql      - A SQL string. See GitHub::KV::SQL#add for details.
+      # bindings - Optional bind values. See GitHub::KV::SQL#add for details.
       #
       # Returns self.
       def self.run(sql, bindings = {})
@@ -347,8 +347,8 @@ module GitHub
 
       # Public: Create and execute a new SQL query, returning its hash_result rows.
       #
-      # sql      - A SQL string. See GitHub::Data::SQL#add for details.
-      # bindings - Optional bind values. See GitHub::Data::SQL#add for details.
+      # sql      - A SQL string. See GitHub::KV::SQL#add for details.
+      # bindings - Optional bind values. See GitHub::KV::SQL#add for details.
       #
       # Returns an Array of result hashes.
       def self.hash_results(sql, bindings = {})
@@ -357,8 +357,8 @@ module GitHub
 
       # Public: Create and execute a new SQL query, returning its result rows.
       #
-      # sql      - A SQL string. See GitHub::Data::SQL#add for details.
-      # bindings - Optional bind values. See GitHub::Data::SQL#add for details.
+      # sql      - A SQL string. See GitHub::KV::SQL#add for details.
+      # bindings - Optional bind values. See GitHub::KV::SQL#add for details.
       #
       # Returns an Array of result arrays.
       def self.results(sql, bindings = {})
@@ -368,8 +368,8 @@ module GitHub
       # Public: Create and execute a new SQL query, returning the value of the
       # first column of the first result row.
       #
-      # sql      - A SQL string. See GitHub::Data::SQL#add for details.
-      # bindings - Optional bind values. See GitHub::Data::SQL#add for details.
+      # sql      - A SQL string. See GitHub::KV::SQL#add for details.
+      # bindings - Optional bind values. See GitHub::KV::SQL#add for details.
       #
       # Returns a value or nil.
       def self.value(sql, bindings = {})
@@ -378,8 +378,8 @@ module GitHub
 
       # Public: Create and execute a new SQL query, returning its values.
       #
-      # sql      - A SQL string. See GitHub::Data::SQL#add for details.
-      # bindings - Optional bind values. See GitHub::Data::SQL#add for details.
+      # sql      - A SQL string. See GitHub::KV::SQL#add for details.
+      # bindings - Optional bind values. See GitHub::KV::SQL#add for details.
       #
       # Returns an Array of values.
       def self.values(sql, bindings = {})

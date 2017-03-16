@@ -1,7 +1,7 @@
 ## Contributing
 
-[fork]: https://github.com/github/github-data/fork
-[pr]: https://github.com/github/github-data/compare
+[fork]: https://github.com/github/github-kv/fork
+[pr]: https://github.com/github/github-kv/compare
 [style]: https://github.com/styleguide/ruby
 [code-of-conduct]: CODE_OF_CONDUCT.md
 
