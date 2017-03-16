@@ -6,8 +6,8 @@ require 'github/data/version'
 Gem::Specification.new do |spec|
   spec.name          = "github-data"
   spec.version       = Github::Data::VERSION
-  spec.authors       = ["John Nunemaker"]
-  spec.email         = ["opensource+github-data@github.com"]
+  spec.authors       = ["GitHub Open Source", "John Nunemaker"]
+  spec.email         = ["opensource+github-data@github.com", "nunemaker@gmail.com"]
 
   spec.summary       = %q{Useful tools for working with SQL data.}
   spec.description   = %q{Useful tools for working with SQL data.}
