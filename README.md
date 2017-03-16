@@ -30,7 +30,7 @@ rails generate github:kv:active_record
 rails db:migrate
 ```
 
-Once you have the table, KV can do neat things like this:
+Once you have created and executed the migration, KV can do neat things like this:
 
 ```ruby
 require "pp"
