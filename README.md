@@ -80,6 +80,16 @@ pp kv.mdel(["foo", "bar"])
 # nil
 ```
 
+## Caveats
+
+### Expiration
+
+KV supports expiring keys and obeys expiration when performing operations, but does not actually purge expired rows. At GitHub, we use [pt-archiver](https://www.percona.com/doc/percona-toolkit/2.1/pt-archiver.html) to nibble expired rows. We configure it to do a replica lag check and use the following options:
+
+* **index_name**: `"index_key_values_on_expires_at"`
+* **limit**: `1000`
+* **where**: `"expires_at <= NOW()"`
+
 ## Development
 
 After checking out the repo, run `script/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `script/console` for an interactive prompt that will allow you to experiment.
