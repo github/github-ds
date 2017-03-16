@@ -1,14 +1,14 @@
 require "test_helper"
 
-class GitHub::Data::KVTest < Minitest::Test
+class GitHub::KVTest < Minitest::Test
   def setup
     ActiveRecord::Base.connection.execute("TRUNCATE `key_values`")
-    @kv = GitHub::Data::KV.new { ActiveRecord::Base.connection }
+    @kv = GitHub::KV.new { ActiveRecord::Base.connection }
   end
 
   def test_initialize_without_connection
-    kv = GitHub::Data::KV.new
-    assert_raises GitHub::Data::KV::MissingConnectionError do
+    kv = GitHub::KV.new
+    assert_raises GitHub::KV::MissingConnectionError do
       kv.get("foo").value!
     end
   end
@@ -41,7 +41,7 @@ class GitHub::Data::KVTest < Minitest::Test
   def test_set_failure
     ActiveRecord::Base.connection.stubs(:insert).raises(Errno::ECONNRESET)
 
-    assert_raises GitHub::Data::KV::UnavailableError do
+    assert_raises GitHub::KV::UnavailableError do
       @kv.set("foo", "bar")
     end
   end
@@ -71,7 +71,7 @@ class GitHub::Data::KVTest < Minitest::Test
   def test_setnx_failure
     ActiveRecord::Base.connection.stubs(:delete).raises(Errno::ECONNRESET)
 
-    assert_raises GitHub::Data::KV::UnavailableError do
+    assert_raises GitHub::KV::UnavailableError do
       @kv.setnx("foo", "bar")
     end
   end
@@ -86,7 +86,7 @@ class GitHub::Data::KVTest < Minitest::Test
   def test_del_failure
     ActiveRecord::Base.connection.stubs(:delete).raises(Errno::ECONNRESET)
 
-    assert_raises GitHub::Data::KV::UnavailableError do
+    assert_raises GitHub::KV::UnavailableError do
       @kv.del("foo")
     end
   end
@@ -106,7 +106,7 @@ class GitHub::Data::KVTest < Minitest::Test
 
     @kv.set("foo", "bar", expires: expires)
 
-    assert_equal expires, GitHub::Data::SQL.value(<<-SQL)
+    assert_equal expires, GitHub::KV::SQL.value(<<-SQL)
       SELECT expires_at FROM key_values WHERE `key` = 'foo'
     SQL
   end
@@ -116,7 +116,7 @@ class GitHub::Data::KVTest < Minitest::Test
 
     @kv.setnx("foo", "bar", expires: expires)
 
-    assert_equal expires, GitHub::Data::SQL.value(<<-SQL)
+    assert_equal expires, GitHub::KV::SQL.value(<<-SQL)
       SELECT expires_at FROM key_values WHERE `key` = 'foo'
     SQL
   end
@@ -145,7 +145,7 @@ class GitHub::Data::KVTest < Minitest::Test
     @kv.set("foo", "bar", expires: 1.hour.from_now)
     @kv.set("foo", "bar")
 
-    assert_nil GitHub::Data::SQL.value(<<-SQL)
+    assert_nil GitHub::KV::SQL.value(<<-SQL)
       SELECT expires_at FROM key_values WHERE `key` = "foo"
     SQL
   end
@@ -165,7 +165,7 @@ class GitHub::Data::KVTest < Minitest::Test
   end
 
   def test_length_checks_key
-    assert_raises GitHub::Data::KV::KeyLengthError do
+    assert_raises GitHub::KV::KeyLengthError do
       @kv.get("A" * 256)
     end
   end
@@ -177,7 +177,7 @@ class GitHub::Data::KVTest < Minitest::Test
   end
 
   def test_length_checks_value
-    assert_raises GitHub::Data::KV::ValueLengthError do
+    assert_raises GitHub::KV::ValueLengthError do
       @kv.set("foo", "A" * 65536)
     end
   end

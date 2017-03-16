@@ -1,23 +1,23 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'github/data/version'
+require "github/kv/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "github-data"
-  spec.version       = Github::Data::VERSION
+  spec.name          = "github-kv"
+  spec.version       = Github::KV::VERSION
   spec.authors       = ["GitHub Open Source", "John Nunemaker"]
-  spec.email         = ["opensource+github-data@github.com", "nunemaker@gmail.com"]
+  spec.email         = ["opensource+github-kv@github.com", "nunemaker@gmail.com"]
 
-  spec.summary       = %q{Useful tools for working with SQL data.}
-  spec.description   = %q{Useful tools for working with SQL data.}
-  spec.homepage      = "https://github.com/github/github-data"
+  spec.summary       = %q{A key/value data store backed by MySQL.}
+  spec.description   = %q{A key/value data store backed by MySQL.}
+  spec.homepage      = "https://github.com/github/github-kv"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
   if spec.respond_to?(:metadata)
-    spec.metadata['allowed_push_host'] = "https://rubygems.org"
+    spec.metadata["allowed_push_host"] = "https://rubygems.org"
   else
     raise "RubyGems 2.0 or newer is required to protect against " \
       "public gem pushes."

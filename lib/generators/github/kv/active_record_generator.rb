@@ -1,7 +1,7 @@
 require 'rails/generators/active_record'
 
 module Github
-  module Data
+  class KV
     module Generators
       class ActiveRecordGenerator < ::Rails::Generators::Base
         include ::Rails::Generators::Migration
