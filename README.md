@@ -23,8 +23,6 @@ Or install it yourself as:
 
 ## Usage
 
-### GitHub::KV
-
 First, you'll need to create the `key_values` table using the included Rails migration generator.
 
 ```
