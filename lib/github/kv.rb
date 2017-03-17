@@ -1,6 +1,6 @@
 require "github/kv/version"
 require "github/kv/result"
-require "github/kv/sql"
+require "github/sql"
 
 # GitHub::KV is a key/value data store backed by MySQL (however, the backing
 # store used should be regarded as an implementation detail).
@@ -94,7 +94,7 @@ module GitHub
       validate_key_array(keys)
 
       Result.new {
-        kvs = GitHub::KV::SQL.results(<<-SQL, :keys => keys, :connection => connection).to_h
+        kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :connection => connection).to_h
           SELECT `key`, value FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > NOW())
         SQL
 
@@ -137,11 +137,11 @@ module GitHub
       validate_expires(expires) if expires
 
       rows = kvs.map { |key, value|
-        [key, value, GitHub::KV::SQL::NOW, GitHub::KV::SQL::NOW, expires || GitHub::KV::SQL::NULL]
+        [key, value, GitHub::SQL::NOW, GitHub::SQL::NOW, expires || GitHub::SQL::NULL]
       }
 
       encapsulate_error do
-        GitHub::KV::SQL.run(<<-SQL, :rows => GitHub::KV::SQL::ROWS(rows), :connection => connection)
+        GitHub::SQL.run(<<-SQL, :rows => GitHub::SQL::ROWS(rows), :connection => connection)
           INSERT INTO key_values (`key`, value, created_at, updated_at, expires_at)
           VALUES :rows
           ON DUPLICATE KEY UPDATE
@@ -186,7 +186,7 @@ module GitHub
       validate_key_array(keys)
 
       Result.new {
-        existing_keys = GitHub::KV::SQL.values(<<-SQL, :keys => keys, :connection => connection).to_set
+        existing_keys = GitHub::SQL.values(<<-SQL, :keys => keys, :connection => connection).to_set
           SELECT `key` FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > NOW())
         SQL
 
@@ -222,11 +222,11 @@ module GitHub
         # achieve the same thing with the right INSERT ... ON DUPLICATE KEY UPDATE
         # query, but then we would not be able to rely on affected_rows
 
-        GitHub::KV::SQL.run(<<-SQL, :key => key, :connection => connection)
+        GitHub::SQL.run(<<-SQL, :key => key, :connection => connection)
           DELETE FROM key_values WHERE `key` = :key AND expires_at <= NOW()
         SQL
 
-        sql = GitHub::KV::SQL.run(<<-SQL, :key => key, :value => value, :expires => expires || GitHub::KV::SQL::NULL, :connection => connection)
+        sql = GitHub::SQL.run(<<-SQL, :key => key, :value => value, :expires => expires || GitHub::SQL::NULL, :connection => connection)
           INSERT IGNORE INTO key_values (`key`, value, created_at, updated_at, expires_at)
           VALUES (:key, :value, NOW(), NOW(), :expires)
         SQL
@@ -263,7 +263,7 @@ module GitHub
       validate_key_array(keys)
 
       encapsulate_error do
-        GitHub::KV::SQL.run(<<-SQL, :keys => keys, :connection => connection)
+        GitHub::SQL.run(<<-SQL, :keys => keys, :connection => connection)
           DELETE FROM key_values WHERE `key` IN :keys
         SQL
       end
