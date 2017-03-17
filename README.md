@@ -183,7 +183,7 @@ To install this gem onto your local machine, run `script/install`. To release a 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/github/github-store. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/github/github-store. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct. We recommend reading the [contributing guide](./CONTRIBUTING.md) as well.
 
 ## Roadmap
 
