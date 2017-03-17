@@ -1,10 +1,10 @@
 # Github::KV
 
-`GitHub::KV` is a key/value data store backed by MySQL and written in Ruby using `GitHub::SQL` and `GitHub::KV::Result`.
+`GitHub::KV` is a key/value data store backed by MySQL and written in Ruby using `GitHub::SQL` and `GitHub::Result`.
 
 `GitHub::SQL` is for building and executing a SQL query. This class uses ActiveRecord's connection class, but provides a better API for bind values and raw data access.
 
-`GitHub::KV::Result` makes it easier to bake in resiliency through the use of a Result object instead of raising exceptions.
+`GitHub::Result` makes it easier to bake in resiliency through the use of a Result object instead of raising exceptions.
 
 ## Installation
 
@@ -42,7 +42,7 @@ kv = GitHub::KV.new { ActiveRecord::Base.connection }
 
 # Get a key.
 pp kv.get("foo")
-#<GitHub::KV::Result:0x3fd88cd3ea9c value: nil>
+#<GitHub::Result:0x3fd88cd3ea9c value: nil>
 
 # Set a key.
 kv.set("foo", "bar")
@@ -50,23 +50,23 @@ kv.set("foo", "bar")
 
 # Get the key again.
 pp kv.get("foo")
-#<GitHub::KV::Result:0x3fe810d06e4c value: "bar">
+#<GitHub::Result:0x3fe810d06e4c value: "bar">
 
 # Get multiple keys at once.
 pp kv.mget(["foo", "bar"])
-#<GitHub::KV::Result:0x3fccccd1b57c value: ["bar", nil]>
+#<GitHub::Result:0x3fccccd1b57c value: ["bar", nil]>
 
 # Check for existence of a key.
 pp kv.exists("foo")
-#<GitHub::KV::Result:0x3fd4ae55ce8c value: true>
+#<GitHub::Result:0x3fd4ae55ce8c value: true>
 
 # Check for existence of key that does not exist.
 pp kv.exists("bar")
-#<GitHub::KV::Result:0x3fd4ae55c554 value: false>
+#<GitHub::Result:0x3fd4ae55c554 value: false>
 
 # Check for existence of multiple keys at once.
 pp kv.mexists(["foo", "bar"])
-#<GitHub::KV::Result:0x3ff1e98e18e8 value: [true, false]>
+#<GitHub::Result:0x3ff1e98e18e8 value: [true, false]>
 
 # Set a key's value if the key does not already exist.
 pp kv.setnx("foo", "bar")

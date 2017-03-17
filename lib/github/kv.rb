@@ -1,5 +1,5 @@
 require "github/kv/version"
-require "github/kv/result"
+require "github/result"
 require "github/sql"
 
 # GitHub::KV is a key/value data store backed by MySQL (however, the backing
@@ -30,11 +30,11 @@ require "github/sql"
 #
 #     If any of these methods raise an exception for some reason (for example,
 #     the database is down), they will return a Result value representing this
-#     error rather than raising the exception directly. See lib/github/kv/result.rb
-#     for more documentation on GitHub::KV::Result including usage examples.
+#     error rather than raising the exception directly. See lib/github/result.rb
+#     for more documentation on GitHub::Result including usage examples.
 #
 #     When using GitHub::KV, it's important to handle error conditions and not
-#     assume that GitHub::KV::Result objects will always represent success.
+#     assume that GitHub::Result objects will always represent success.
 #     Code using GitHub::KV should be able to fail partially if
 #     GitHub::KV is down. How exactly to do this will depend on a
 #     case-by-case basis - it may involve falling back to a default value, or it
