@@ -192,7 +192,7 @@ Nothing currently on our radar other than continued maintenance. Have a big idea
 ## Maintainers
 
 | pic | @mention |
-|---|---|---|
+|---|---|
 | ![@jnunemaker](https://avatars3.githubusercontent.com/u/235?s=64) | [@jnunemaker](https://github.com/jnunemaker) |
 | ![@charliesome](https://avatars3.githubusercontent.com/u/179065?s=64) | [@charliesome](https://github.com/charliesome) |
 
