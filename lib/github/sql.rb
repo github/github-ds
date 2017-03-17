@@ -138,6 +138,7 @@ module GitHub
         query = nil
       end
 
+      @last_insert_id = nil
       @affected_rows  = nil
       @binds      = binds ? binds.dup : {}
       @query      = ""
@@ -241,7 +242,7 @@ module GitHub
 
     # Public: The last inserted ID for this connection.
     def last_insert_id
-      connection.raw_connection.last_insert_id
+      @last_insert_id || connection.raw_connection.last_insert_id
     end
 
     # Public: Map each row to an instance of an ActiveRecord::Base subclass.
