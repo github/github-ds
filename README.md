@@ -6,7 +6,7 @@
 * `GitHub::SQL` is for building and executing a SQL query. This class uses ActiveRecord's connection class, but provides a better API for bind values and raw data access.
 * `GitHub::Result` makes it easier to bake in resiliency through the use of a Result object instead of raising exceptions.
 
-**Current Status**: Used in production extensively at GitHub.
+**Current Status**: Used in production extensively at GitHub. Because of this, all changes will be thoroughly vetted, which could slow down the process of contributing. We will do our best to actively communicate status of pull requests with any contributors. If you have any substantial changes that you would like to make, it would be great to first [open an issue](http://github.com/github/github-store/issues/new) to discuss them with us.
 
 ## Installation
 
