@@ -106,7 +106,7 @@ class GitHub::KVTest < Minitest::Test
 
     @kv.set("foo", "bar", expires: expires)
 
-    assert_equal expires, GitHub::KV::SQL.value(<<-SQL)
+    assert_equal expires, GitHub::SQL.value(<<-SQL)
       SELECT expires_at FROM key_values WHERE `key` = 'foo'
     SQL
   end
@@ -116,7 +116,7 @@ class GitHub::KVTest < Minitest::Test
 
     @kv.setnx("foo", "bar", expires: expires)
 
-    assert_equal expires, GitHub::KV::SQL.value(<<-SQL)
+    assert_equal expires, GitHub::SQL.value(<<-SQL)
       SELECT expires_at FROM key_values WHERE `key` = 'foo'
     SQL
   end
@@ -145,7 +145,7 @@ class GitHub::KVTest < Minitest::Test
     @kv.set("foo", "bar", expires: 1.hour.from_now)
     @kv.set("foo", "bar")
 
-    assert_nil GitHub::KV::SQL.value(<<-SQL)
+    assert_nil GitHub::SQL.value(<<-SQL)
       SELECT expires_at FROM key_values WHERE `key` = "foo"
     SQL
   end
