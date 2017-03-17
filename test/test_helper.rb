@@ -12,6 +12,6 @@ ActiveRecord::Base.establish_connection({
 })
 
 ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `key_values`")
-require "generators/github/kv/templates/migration"
+require "generators/github/store/templates/migration"
 ActiveRecord::Migration.verbose = false
 CreateKeyValuesTable.up

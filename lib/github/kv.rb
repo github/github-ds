@@ -1,4 +1,3 @@
-require "github/kv/version"
 require "github/result"
 require "github/sql"
 

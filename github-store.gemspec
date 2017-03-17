@@ -1,17 +1,17 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "github/kv/version"
+require "github/store/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "github-kv"
-  spec.version       = Github::KV::VERSION
+  spec.name          = "github-store"
+  spec.version       = GitHub::Store::VERSION
   spec.authors       = ["GitHub Open Source", "John Nunemaker"]
-  spec.email         = ["opensource+github-kv@github.com", "nunemaker@gmail.com"]
+  spec.email         = ["opensource+github-store@github.com", "nunemaker@gmail.com"]
 
   spec.summary       = %q{A key/value data store backed by MySQL.}
   spec.description   = %q{A key/value data store backed by MySQL.}
-  spec.homepage      = "https://github.com/github/github-kv"
+  spec.homepage      = "https://github.com/github/github-store"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'

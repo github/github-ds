@@ -3,7 +3,7 @@ require "rails"
 require "rails/test_help"
 require "active_record"
 require "rails/generators/test_case"
-require "generators/github/kv/active_record_generator"
+require "generators/github/store/active_record_generator"
 
 class GithubKVActiveRecordGeneratorTest < Rails::Generators::TestCase
   tests Github::KV::Generators::ActiveRecordGenerator
