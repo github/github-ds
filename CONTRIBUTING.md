@@ -13,7 +13,7 @@ Please note that this project is released with a [Contributor Code of Conduct][c
 
 0. [Fork][fork] and clone the repository
 0. Configure and install the dependencies: `script/bootstrap`
-0. Make sure the tests pass on your machine: `rake`
+0. Make sure the tests pass on your machine: `script/test`
 0. Create a new branch: `git checkout -b my-branch-name`
 0. Make your change, add tests, and make sure the tests still pass
 0. Push to your fork and [submit a pull request][pr]
