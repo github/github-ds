@@ -1,10 +1,10 @@
-# Github::KV
+# Github::Store
 
-`GitHub::KV` is a key/value data store backed by MySQL and written in Ruby using `GitHub::SQL` and `GitHub::Result`.
+`GitHub::Store` is a collection of Ruby libraries for working with SQL on top of ActiveRecord's connection.
 
-`GitHub::SQL` is for building and executing a SQL query. This class uses ActiveRecord's connection class, but provides a better API for bind values and raw data access.
-
-`GitHub::Result` makes it easier to bake in resiliency through the use of a Result object instead of raising exceptions.
+* `GitHub::KV` is a key/value data store backed by MySQL.
+* `GitHub::SQL` is for building and executing a SQL query. This class uses ActiveRecord's connection class, but provides a better API for bind values and raw data access.
+* `GitHub::Result` makes it easier to bake in resiliency through the use of a Result object instead of raising exceptions.
 
 ## Installation
 
@@ -23,6 +23,10 @@ Or install it yourself as:
     $ gem install github-store
 
 ## Usage
+
+Below is a taste of what you can do with these libraries. If you want to see more, check out the [examples directory](./examples/).
+
+### GitHub::KV
 
 First, you'll need to create the `key_values` table using the included Rails migration generator.
 
@@ -81,9 +85,87 @@ pp kv.mdel(["foo", "bar"])
 # nil
 ```
 
+### GitHub::SQL
+
+```ruby
+# Select, insert, update, delete or whatever you need...
+statement = "INSERT INTO example_key_values (`key`, `value`) VALUES (:key, :value)"
+GitHub::SQL.run statement, key: "foo", value: "bar"
+
+statement = "SELECT value FROM example_key_values WHERE `key` = :key"
+GitHub::SQL.value select_statement, key: "foo"
+
+# Or slowly build up a query based on conditionals...
+sql = GitHub::SQL.new "SELECT `VALUE` FROM example_key_values"
+
+key = ENV["KEY"]
+unless key.nil?
+  sql.add "WHERE `key` = :key", key: key
+end
+
+limit = ENV["LIMIT"]
+unless limit.nil?
+  sql.add "ORDER BY `key` ASC"
+  sql.add "LIMIT :limit", limit: limit.to_i
+end
+
+p sql.results
+```
+
+### GitHub::Result
+
+```ruby
+def do_something
+  1
+end
+
+def do_something_that_errors
+  raise "noooooppppeeeee"
+end
+
+result = GitHub::Result.new { do_something }
+p result.ok? # => true
+p result.value! # => 1
+
+result = GitHub::Result.new { do_something_that_errors }
+p result.ok? # => false
+p result.value { "default when error happens" } # => "default when error happens"
+begin
+  result.value! # raises exception because error happened
+rescue => error
+  p result.error
+  p error
+end
+
+# Outputs Step 1, 2, 3
+result = GitHub::Result.new {
+  GitHub::Result.new { puts "Step 1: success!" }
+}.then { |value|
+  GitHub::Result.new { puts "Step 2: success!" }
+}.then { |value|
+  GitHub::Result.new { puts "Step 3: success!" }
+}
+p result.ok? # => true
+
+# Outputs Step 1, 2 and stops.
+result = GitHub::Result.new {
+  GitHub::Result.new { puts "Step 1: success!" }
+}.then { |value|
+  GitHub::Result.new {
+    puts "Step 2: failed!"
+    raise
+  }
+}.then { |value|
+  GitHub::Result.new {
+    puts "Step 3: should not get here because previous step failed!"
+  }
+}
+p result.ok? # => false
+```
+
 ## Caveats
 
-### Expiration
+### GitHub::KV Expiration
 
 KV supports expiring keys and obeys expiration when performing operations, but does not actually purge expired rows. At GitHub, we use [pt-archiver](https://www.percona.com/doc/percona-toolkit/2.1/pt-archiver.html) to nibble expired rows. We configure it to do a replica lag check and use the following options:
 

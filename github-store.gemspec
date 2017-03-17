@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["GitHub Open Source", "John Nunemaker"]
   spec.email         = ["opensource+github-store@github.com", "nunemaker@gmail.com"]
 
-  spec.summary       = %q{A key/value data store backed by MySQL.}
-  spec.description   = %q{A key/value data store backed by MySQL.}
+  spec.summary       = %q{A collection of libraries for working with SQL on top of ActiveRecord's connection.}
+  spec.description   = %q{A collection of libraries for working with SQL on top of ActiveRecord's connection.}
   spec.homepage      = "https://github.com/github/github-store"
   spec.license       = "MIT"
 
