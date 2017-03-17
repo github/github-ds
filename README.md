@@ -189,6 +189,12 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/github
 
 Nothing currently on our radar other than continued maintenance. Have a big idea? [Let us know](http://github.com/github/github-store/issues/new).
 
+## Maintainers
+
+| pic | @mention |
+|---|---|---|
+| ![@jnunemaker](https://avatars3.githubusercontent.com/u/235?s=64) | [@jnunemaker](https://github.com/jnunemaker) |
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
