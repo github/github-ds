@@ -1,5 +1,5 @@
 module GitHub
-  module Store
+  module DS
     VERSION = "0.1.0"
   end
 end

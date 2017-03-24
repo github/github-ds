@@ -11,10 +11,10 @@ attempts = 0
 begin
   ActiveRecord::Base.establish_connection({
     adapter: "mysql2",
-    database: "github_store_test",
+    database: "github_ds_test",
   })
   ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `key_values`")
-  require "generators/github/store/templates/migration"
+  require "generators/github/ds/templates/migration"
   ActiveRecord::Migration.verbose = false
   CreateKeyValuesTable.up
 rescue ActiveRecord::NoDatabaseError
@@ -22,7 +22,7 @@ rescue ActiveRecord::NoDatabaseError
   ActiveRecord::Base.establish_connection({
     adapter: "mysql2",
   })
-  ActiveRecord::Base.connection.execute("CREATE DATABASE `github_store_test`")
+  ActiveRecord::Base.connection.execute("CREATE DATABASE `github_ds_test`")
   attempts += 1
   retry
 end

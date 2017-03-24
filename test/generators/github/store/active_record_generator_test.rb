@@ -3,10 +3,10 @@ require "rails"
 require "rails/test_help"
 require "active_record"
 require "rails/generators/test_case"
-require "generators/github/store/active_record_generator"
+require "generators/github/ds/active_record_generator"
 
 class GithubKVActiveRecordGeneratorTest < Rails::Generators::TestCase
-  tests Github::KV::Generators::ActiveRecordGenerator
+  tests Github::DS::Generators::ActiveRecordGenerator
   destination File.expand_path("../../../../tmp", __FILE__)
   setup :prepare_destination
 

@@ -1,19 +1,19 @@
-# Github::Store
+# GitHub::DS
 
-`GitHub::Store` is a collection of Ruby libraries for working with SQL on top of ActiveRecord's connection.
+`GitHub::DS` is a collection of Ruby libraries for working with SQL on top of ActiveRecord's connection.
 
 * `GitHub::KV` is a key/value data store backed by MySQL.
 * `GitHub::SQL` is for building and executing a SQL query. This class uses ActiveRecord's connection class, but provides a better API for bind values and raw data access.
 * `GitHub::Result` makes it easier to bake in resiliency through the use of a Result object instead of raising exceptions.
 
-**Current Status**: Used in production extensively at GitHub. Because of this, all changes will be thoroughly vetted, which could slow down the process of contributing. We will do our best to actively communicate status of pull requests with any contributors. If you have any substantial changes that you would like to make, it would be great to first [open an issue](http://github.com/github/github-store/issues/new) to discuss them with us.
+**Current Status**: Used in production extensively at GitHub. Because of this, all changes will be thoroughly vetted, which could slow down the process of contributing. We will do our best to actively communicate status of pull requests with any contributors. If you have any substantial changes that you would like to make, it would be great to first [open an issue](http://github.com/github/github-ds/issues/new) to discuss them with us.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'github-store'
+gem 'github-ds'
 ```
 
 And then execute:
@@ -22,7 +22,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install github-store
+    $ gem install github-ds
 
 ## Usage
 
@@ -183,11 +183,11 @@ To install this gem onto your local machine, run `script/install`. To release a 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/github/github-store. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct. We recommend reading the [contributing guide](./CONTRIBUTING.md) as well.
+Bug reports and pull requests are welcome on GitHub at https://github.com/github/github-ds. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct. We recommend reading the [contributing guide](./CONTRIBUTING.md) as well.
 
 ## Roadmap
 
-Nothing currently on our radar other than continued maintenance. Have a big idea? [Let us know](http://github.com/github/github-store/issues/new).
+Nothing currently on our radar other than continued maintenance. Have a big idea? [Let us know](http://github.com/github/github-ds/issues/new).
 
 ## Maintainers
 

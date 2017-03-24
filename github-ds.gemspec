@@ -1,17 +1,17 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "github/store/version"
+require "github/ds/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "github-store"
-  spec.version       = GitHub::Store::VERSION
+  spec.name          = "github-ds"
+  spec.version       = GitHub::DS::VERSION
   spec.authors       = ["GitHub Open Source", "John Nunemaker"]
-  spec.email         = ["opensource+github-store@github.com", "nunemaker@gmail.com"]
+  spec.email         = ["opensource+github-ds@github.com", "nunemaker@gmail.com"]
 
   spec.summary       = %q{A collection of libraries for working with SQL on top of ActiveRecord's connection.}
   spec.description   = %q{A collection of libraries for working with SQL on top of ActiveRecord's connection.}
-  spec.homepage      = "https://github.com/github/github-store"
+  spec.homepage      = "https://github.com/github/github-ds"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'

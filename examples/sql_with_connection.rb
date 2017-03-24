@@ -6,7 +6,7 @@ class SomeModel < ActiveRecord::Base
 
   establish_connection({
     adapter: "mysql2",
-    database: "github_store_test",
+    database: "github_ds_test",
   })
 end
 
