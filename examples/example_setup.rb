@@ -1,4 +1,3 @@
-require File.expand_path("../example_setup", __FILE__)
 require "pp"
 require "pathname"
 root_path = Pathname(__FILE__).dirname.join("..").expand_path
