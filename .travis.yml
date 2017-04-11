@@ -1,5 +1,12 @@
 sudo: false
 language: ruby
 rvm:
-  - 2.3.3
+  - 2.2
+  - 2.3
+  - 2.4
 before_install: gem install bundler -v 1.14.6
+script: bundle exec rake
+env:
+  - RAILS_VERSION=5.0.0
+  - RAILS_VERSION=4.2.5
+  - RAILS_VERSION=3.2.21
