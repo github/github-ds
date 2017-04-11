@@ -16,7 +16,7 @@ begin
   require "generators/github/ds/templates/migration"
   ActiveRecord::Migration.verbose = false
   CreateKeyValuesTable.up
-rescue ActiveRecord::NoDatabaseError
+rescue
   raise if attempts >= 1
   ActiveRecord::Base.establish_connection({
     adapter: "mysql2",
