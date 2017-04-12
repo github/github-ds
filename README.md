@@ -105,17 +105,23 @@ GitHub::SQL.value <<-SQL, key: "foo"
 SQL
 
 # Or slowly build up a query based on conditionals...
-sql = GitHub::SQL.new "SELECT `VALUE` FROM example_key_values"
+sql = GitHub::SQL.new <<-SQL
+  SELECT `value` FROM example_key_values
+SQL
 
 key = ENV["KEY"]
 unless key.nil?
-  sql.add "WHERE `key` = :key", key: key
+  sql.add <<-SQL, key: key
+    WHERE `key` = :key
+  SQL
 end
 
 limit = ENV["LIMIT"]
 unless limit.nil?
-  sql.add "ORDER BY `key` ASC"
-  sql.add "LIMIT :limit", limit: limit.to_i
+  sql.add <<-SQL, limit: limit.to_i
+    ORDER BY `key` ASC"
+    LIMIT :limit
+  SQL
 end
 
 p sql.results
