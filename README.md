@@ -119,7 +119,7 @@ end
 limit = ENV["LIMIT"]
 unless limit.nil?
   sql.add <<-SQL, limit: limit.to_i
-    ORDER BY `key` ASC"
+    ORDER BY `key` ASC
     LIMIT :limit
   SQL
 end
