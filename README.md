@@ -91,11 +91,18 @@ pp kv.mdel(["foo", "bar"])
 
 ```ruby
 # Select, insert, update, delete or whatever you need...
-statement = "INSERT INTO example_key_values (`key`, `value`) VALUES (:key, :value)"
-GitHub::SQL.run statement, key: "foo", value: "bar"
+GitHub::SQL.results <<-SQL
+  SELECT * FROM example_key_values
+SQL
 
-statement = "SELECT value FROM example_key_values WHERE `key` = :key"
-GitHub::SQL.value select_statement, key: "foo"
+GitHub::SQL.run <<-SQL, key: "foo", value: "bar"
+  INSERT INTO example_key_values (`key`, `value`)
+  VALUES (:key, :value)
+SQL
+
+GitHub::SQL.value <<-SQL, key: "foo"
+  SELECT value FROM example_key_values WHERE `key` = :key
+SQL
 
 # Or slowly build up a query based on conditionals...
 sql = GitHub::SQL.new "SELECT `VALUE` FROM example_key_values"

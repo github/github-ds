@@ -10,15 +10,17 @@ class SomeModel < ActiveRecord::Base
   })
 end
 
-insert_statement = "INSERT INTO example_key_values (`key`, `value`) VALUES (:key, :value)"
-
 ActiveRecord::Base.transaction do
   # Insert bar on base connection.
-  GitHub::SQL.run insert_statement, key: "bar", value: "baz", connection: ActiveRecord::Base.connection
+  GitHub::SQL.run <<-SQL, key: "bar", value: "baz", connection: ActiveRecord::Base.connection
+    INSERT INTO example_key_values (`key`, `value`) VALUES (:key, :value)
+  SQL
 
   SomeModel.transaction do
     # Insert foo on different connection.
-    GitHub::SQL.run insert_statement, key: "foo", value: "bar", connection: SomeModel.connection
+    GitHub::SQL.run <<-SQL, key: "foo", value: "bar", connection: SomeModel.connection
+      INSERT INTO example_key_values (`key`, `value`) VALUES (:key, :value)
+    SQL
   end
 
   # Roll back "bar" insertion.
@@ -28,5 +30,7 @@ end
 # Show that "bar" key is not here because that connection's transaction was
 # rolled back. SomeModel is a different connection and started a different
 # transaction, which succeeded, so "foo" key was created.
-p GitHub::SQL.values "SELECT `key` FROM example_key_values"
+p GitHub::SQL.values <<-SQL
+  SELECT `key` FROM example_key_values
+SQL
 # ["foo"]
