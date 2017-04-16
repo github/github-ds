@@ -37,6 +37,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "activerecord", "~> 5.0"
   spec.add_development_dependency "activesupport"
   spec.add_development_dependency "mysql2"
-  spec.add_development_dependency "activerecord-mysql-adapter"
   spec.add_development_dependency "mocha", "~> 1.2.1"
 end
