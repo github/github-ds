@@ -33,7 +33,7 @@ Below is a taste of what you can do with these libraries. If you want to see mor
 First, you'll need to create the `key_values` table using the included Rails migration generator.
 
 ```
-rails generate github:kv:active_record
+rails generate github:ds:active_record
 rails db:migrate
 ```
 
