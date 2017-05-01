@@ -6,5 +6,6 @@ rvm:
 before_script: gem install bundler -v 1.14.6
 script: bundle exec rake
 env:
+  - RAILS_VERSION=5.1.0
   - RAILS_VERSION=5.0.0
   - RAILS_VERSION=4.2.5
