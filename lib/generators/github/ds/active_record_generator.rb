@@ -1,7 +1,7 @@
 require "rails/generators/active_record"
 
 module Github
-  module DS
+  module Ds
     module Generators
       class ActiveRecordGenerator < ::Rails::Generators::Base
         include ::Rails::Generators::Migration
