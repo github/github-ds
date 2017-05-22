@@ -1,4 +1,4 @@
-class CreateKeyValuesTable < ActiveRecord::Migration
+class CreateKeyValuesTable < ActiveRecord::Migration<%= migration_version %>
   def self.up
     create_table :key_values do |t|
       t.string :key, :null => false
