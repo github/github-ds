@@ -83,4 +83,8 @@ class GitHub::ResultTest < Minitest::Test
 
     assert_equal e, GitHub::Result.new { raise e }.error
   end
+
+  def test_initialize_without_block
+    assert_predicate GitHub::Result.new, :ok?
+  end
 end
