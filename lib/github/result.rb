@@ -15,7 +15,7 @@ module GitHub
     #
     def initialize
       begin
-        @value = yield
+        @value = yield if block_given?
         @error = nil
       rescue => e
         @error = e
