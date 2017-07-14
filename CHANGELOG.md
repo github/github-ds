@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+Additions
+
+* `Result.new` without block returns `true` for `ok?` https://github.com/github/github-ds/pull/19
+
 ## 0.2.0
 
 Fixes
