@@ -187,4 +187,30 @@ class GitHub::SQLTest < Minitest::Test
       GitHub::SQL.run("DROP TABLE affected_rows_test")
     end
   end
+
+  DEFINE_REPOSITORY = -> { class Repository < ActiveRecord::Base; end }
+  def test_models
+    begin
+      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
+      ActiveRecord::Base.connection.execute <<-SQL
+        CREATE TABLE `repositories` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `name` varchar(255) DEFAULT NULL,
+          `updated_at` datetime DEFAULT NULL,
+          `created_at` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      SQL
+      DEFINE_REPOSITORY.call
+      Repository.create
+
+      repository = GitHub::SQL.new(<<-SQL).models(Repository).first
+        SELECT `repositories`.* FROM `repositories`
+      SQL
+
+      assert_kind_of Repository, repository
+    ensure
+      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
+    end
+  end
 end
