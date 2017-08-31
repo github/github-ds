@@ -36,7 +36,7 @@ rescue
     adapter: "mysql2",
     username: "root",
   })
-  ActiveRecord::Base.connection.execute("CREATE DATABASE `github_ds_test`")
+  ActiveRecord::Base.connection.execute("CREATE DATABASE IF NOT EXISTS `github_ds_test`")
   attempts += 1
   retry
 end
