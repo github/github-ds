@@ -319,7 +319,7 @@ module GitHub
     end
 
     def validate_value_length(value)
-      if value.length > MAX_VALUE_LENGTH
+      if value.bytesize > MAX_VALUE_LENGTH
         raise ValueLengthError, "value of length #{value.length} exceeds maximum value length of #{MAX_VALUE_LENGTH}"
       end
     end

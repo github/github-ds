@@ -188,5 +188,9 @@ class GitHub::KVTest < Minitest::Test
     assert_raises GitHub::KV::ValueLengthError do
       @kv.set("foo", "A" * 65536)
     end
+
+    assert_raises GitHub::KV::ValueLengthError do
+      @kv.set("foo", "💥" * 20000)
+    end
   end
 end
