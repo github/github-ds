@@ -271,14 +271,18 @@ module GitHub
     end
 
   private
-    def validate_key(key)
-      raise TypeError, "key must be a String in #{self.class.name}, but was #{key.class}" unless key.is_a?(String)
+    def validate_key(key, error_message: nil)
+      unless key.is_a?(String)
+        raise TypeError, error_message || "key must be a String in #{self.class.name}, but was #{key.class}"
+      end
 
       validate_key_length(key)
     end
 
-    def validate_value(value)
-      raise TypeError, "value must be a String in #{self.class.name}, but was #{value.class}" unless value.is_a?(String)
+    def validate_value(value, error_message: nil)
+      unless value.is_a?(String) || value.is_a?(GitHub::SQL::Literal)
+        raise TypeError, error_message || "value must be a String in #{self.class.name} or SQL::Literal, but was #{value.class}"
+      end
 
       validate_value_length(value)
     end
@@ -299,20 +303,12 @@ module GitHub
 
     def validate_key_value_hash(kvs)
       unless kvs.is_a?(Hash)
-        raise TypeError, "kvs must be a {String => String} in #{self.class.name}, but was #{key.class}"
+        raise TypeError, "kvs must be a {String => String} in #{self.class.name}, but was #{kvs.class}"
       end
 
       kvs.each do |key, value|
-        unless key.is_a?(String)
-          raise TypeError, "kvs must be a {String => String} in #{self.class.name}, but also saw at least one key of type #{key.class}"
-        end
-
-        unless value.is_a?(String)
-          raise TypeError, "kvs must be a {String => String} in #{self.class.name}, but also saw at least one value of type #{value.class}"
-        end
-
-        validate_key_length(key)
-        validate_value_length(value)
+        validate_key(key, error_message: "kvs must be a {String => [String|Literal]} in #{self.class.name}, but also saw at least one key of type #{key.class}")
+        validate_value(value, error_message: "kvs must be a {String => [String|Literal]} in #{self.class.name}, but also saw at least one value of type #{value.class}")
       end
     end
 

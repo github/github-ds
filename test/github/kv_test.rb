@@ -21,6 +21,14 @@ class GitHub::KVTest < Minitest::Test
     assert_equal "bar", @kv.get("foo").value!
   end
 
+  def test_get_set_binary_data
+    assert_nil @kv.get("foo").value!
+
+    @kv.set("foo", GitHub::SQL::BINARY("bar"))
+
+    assert_equal "bar", @kv.get("foo").value!
+  end
+
   def test_mget_and_mset
     assert_equal [nil, nil], @kv.mget(["a", "b"]).value!
 
