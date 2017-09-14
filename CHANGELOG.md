@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.2
+
+Additions
+
+* `GitHub::KV` accepts `SQL::Literal` as valid values https://github.com/github/github-ds/pull/21/commits/c11d4e3154dd3435d509a3356f46d0a2981d7234
+
+Fixes
+
+* Value length validation takes into account that strings can be made of multi-byte characters https://github.com/github/github-ds/pull/21/commits/5156f95ef04b1ecf2ce90929c5752b2e61d39566
+
 ## 0.2.1
 
 Additions
