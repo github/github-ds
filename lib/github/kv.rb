@@ -307,8 +307,8 @@ module GitHub
       end
 
       kvs.each do |key, value|
-        validate_key(key, error_message: "kvs must be a {String => [String|Literal]} in #{self.class.name}, but also saw at least one key of type #{key.class}")
-        validate_value(value, error_message: "kvs must be a {String => [String|Literal]} in #{self.class.name}, but also saw at least one value of type #{value.class}")
+        validate_key(key, error_message: "kvs must be a {String => [String | SQL::Literal]} in #{self.class.name}, but also saw at least one key of type #{key.class}")
+        validate_value(value, error_message: "kvs must be a {String => [String | SQL::Literal]} in #{self.class.name}, but also saw at least one value of type #{value.class}")
       end
     end
 
