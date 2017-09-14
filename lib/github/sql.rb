@@ -44,6 +44,10 @@ module GitHub
       def inspect
         "<#{self.class.name} #{value}>"
       end
+
+      def bytesize
+        value.bytesize
+      end
     end
 
     # Internal: a list of arrays of values for insertion into SQL.

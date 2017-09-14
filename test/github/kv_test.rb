@@ -21,6 +21,14 @@ class GitHub::KVTest < Minitest::Test
     assert_equal "bar", @kv.get("foo").value!
   end
 
+  def test_get_set_binary_data
+    assert_nil @kv.get("foo").value!
+
+    @kv.set("foo", GitHub::SQL::BINARY("bar"))
+
+    assert_equal "bar", @kv.get("foo").value!
+  end
+
   def test_mget_and_mset
     assert_equal [nil, nil], @kv.mget(["a", "b"]).value!
 
@@ -179,6 +187,10 @@ class GitHub::KVTest < Minitest::Test
   def test_length_checks_value
     assert_raises GitHub::KV::ValueLengthError do
       @kv.set("foo", "A" * 65536)
+    end
+
+    assert_raises GitHub::KV::ValueLengthError do
+      @kv.set("foo", "💥" * 20000)
     end
   end
 end
