@@ -233,6 +233,32 @@ class GitHub::SQLTest < Minitest::Test
 
       assert_equal original_default_timezone, ActiveRecord::Base.default_timezone
     ensure
+      ActiveRecord::Base.default_timezone = original_default_timezone
+      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
+    end
+  end
+
+  def test_results_doesnt_modify_timezone_if_early_return_invoked
+    begin
+      original_default_timezone = ActiveRecord::Base.default_timezone
+      refute_nil original_default_timezone
+
+      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
+      ActiveRecord::Base.connection.execute <<-SQL
+        CREATE TABLE `repositories` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `name` varchar(255) DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      SQL
+
+      sql = GitHub::SQL.new("SELECT * FROM repositories LIMIT 1", force_timezone: :local)
+      sql.results
+      sql.results
+
+      assert_equal original_default_timezone, ActiveRecord::Base.default_timezone
+    ensure
+      ActiveRecord::Base.default_timezone = original_default_timezone
       ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
     end
   end
