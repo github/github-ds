@@ -67,6 +67,13 @@ module GitHub
       end
     end
 
+    # Public: Run inside a transaction
+    def self.transaction
+      ActiveRecord::Base.connection.transaction do
+        yield
+      end
+    end
+
     # Public: Instantiate a literal SQL value.
     #
     # WARNING: The given value is LITERALLY inserted into your SQL without being
