@@ -272,38 +272,40 @@ module GitHub
       return @results if defined? @results
       return [] if frozen?
 
-      if @force_tz
-        zone = ActiveRecord::Base.default_timezone
-        ActiveRecord::Base.default_timezone = @force_tz
+      begin
+        if @force_tz
+          zone = ActiveRecord::Base.default_timezone
+          ActiveRecord::Base.default_timezone = @force_tz
+        end
+
+        case query
+        when /\ADELETE/i
+          @affected_rows = connection.delete(query, "#{self.class.name} Delete")
+
+        when /\AINSERT/i
+          @last_insert_id = connection.insert(query, "#{self.class.name} Insert")
+
+        when /\AUPDATE/i
+          @affected_rows = connection.update(query, "#{self.class.name} Update")
+
+        when /\ASELECT/i
+          # Why not execute or select_rows? Because select_all hits the query cache.
+          @hash_results = connection.select_all(query, "#{self.class.name} Select")
+          @results = @hash_results.map(&:values)
+
+        else
+          @results = connection.execute(query, "#{self.class.name} Execute").to_a
+        end
+
+        @results ||= []
+
+        retrieve_found_row_count
+        freeze
+
+        @results
+      ensure
+        ActiveRecord::Base.default_timezone = zone if @force_tz
       end
-
-      case query
-      when /\ADELETE/i
-        @affected_rows = connection.delete(query, "#{self.class.name} Delete")
-
-      when /\AINSERT/i
-        @last_insert_id = connection.insert(query, "#{self.class.name} Insert")
-
-      when /\AUPDATE/i
-        @affected_rows = connection.update(query, "#{self.class.name} Update")
-
-      when /\ASELECT/i
-        # Why not execute or select_rows? Because select_all hits the query cache.
-        @hash_results = connection.select_all(query, "#{self.class.name} Select")
-        @results = @hash_results.map(&:values)
-
-      else
-        @results = connection.execute(query, "#{self.class.name} Execute").to_a
-      end
-
-      @results ||= []
-
-      retrieve_found_row_count
-      freeze
-
-      @results
-    ensure
-      ActiveRecord::Base.default_timezone = zone if @force_tz
     end
 
     # Public: If the query is a SELECT, return an array of hashes instead of an array of arrays.
