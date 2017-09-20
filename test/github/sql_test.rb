@@ -147,6 +147,30 @@ class GitHub::SQLTest < Minitest::Test
     refute_includes sql.query, "foo"
   end
 
+  def test_transaction
+    GitHub::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
+
+    begin
+      GitHub::SQL.transaction do
+        GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2)")
+        GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
+        raise "BOOM"
+      end
+    rescue => e
+      assert_equal 0, GitHub::SQL.new("Select count(*) from affected_rows_test").value
+    else
+      fail
+    end
+
+    GitHub::SQL.transaction do
+      GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2)")
+      GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
+    end
+    assert_equal 4, GitHub::SQL.new("Select count(*) from affected_rows_test").value
+  ensure
+    GitHub::SQL.run("DROP TABLE affected_rows_test")
+  end
+
   def test_literal
     assert_kind_of GitHub::SQL::Literal, GitHub::SQL::LITERAL("foo")
   end
