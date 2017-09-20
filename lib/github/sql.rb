@@ -167,16 +167,18 @@ module GitHub
 
       query << " " unless query.empty?
 
-      if @force_tz
-        zone = ActiveRecord::Base.default_timezone
-        ActiveRecord::Base.default_timezone = @force_tz
+      begin
+        if @force_tz
+          zone = ActiveRecord::Base.default_timezone
+          ActiveRecord::Base.default_timezone = @force_tz
+        end
+
+        query << interpolate(sql.strip, extras)
+
+        self
+      ensure
+        ActiveRecord::Base.default_timezone = zone if @force_tz
       end
-
-      query << interpolate(sql.strip, extras)
-
-      self
-    ensure
-      ActiveRecord::Base.default_timezone = zone if @force_tz
     end
 
     # Public: Add a chunk of SQL to the query, unless query generated so far is empty.
