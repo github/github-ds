@@ -208,6 +208,7 @@ Nothing currently on our radar other than continued maintenance. Have a big idea
 |---|---|
 | ![@charliesome](https://avatars3.githubusercontent.com/u/179065?s=64) | [@charliesome](https://github.com/charliesome) |
 | ![@jnunemaker](https://avatars3.githubusercontent.com/u/235?s=64) | [@jnunemaker](https://github.com/jnunemaker) |
+| ![@miguelff](https://avatars3.githubusercontent.com/u/210307?s=64) | [@miguelff](https://github.com/miguelff) |
 | ![@zerowidth](https://avatars3.githubusercontent.com/u/3999?s=64) | [@zerowidth](https://github.com/zerowidth) |
 
 ## License

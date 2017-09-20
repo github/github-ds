@@ -149,7 +149,7 @@ module GitHub
       @connection = @binds.delete :connection
       @force_tz   = @binds.delete :force_timezone
 
-      add query if !query.nil?
+      add query
     end
 
     # Public: Add a chunk of SQL to the query. Any ":keyword" tokens in the SQL
@@ -163,7 +163,7 @@ module GitHub
     # Returns self.
     # Raises GitHub::SQL::BadBind for unknown keyword tokens.
     def add(sql, extras = nil)
-      return self if sql.blank?
+      return self if sql.nil? || sql.empty?
 
       query << " " unless query.empty?
 

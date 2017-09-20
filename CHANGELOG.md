@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.3
+
+Additions
+
+* github-ds does not use `blank?` anymore hence not depending on `active_support/core_ext/object/blank` https://github.com/github/github-ds/commit/a22c397eaaa00bb441fb4a0ecdf3e371daa9001a
+
+Fixes
+
+* `ActiveRecord::Base.default_timezone` is not unintentionally set to `nil` https://github.com/github/github-ds/pull/22
+
 ## 0.2.2
 
 Additions
