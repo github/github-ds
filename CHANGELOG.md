@@ -1,10 +1,16 @@
 # Changelog
 
+## 0.2.4
+
+Additions
+
+* `GitHub::SQL.transaction` was added to allow `GitHub::SQL` queries to run transactionally https://github.com/github/github-ds/pull/24
+
 ## 0.2.3
 
 Additions
 
-* github-ds does not use `blank?` anymore hence not depending on `active_support/core_ext/object/blank` https://github.com/github/github-ds/commit/a22c397eaaa00bb441fb4a0ecdf3e371daa9001a
+* github-ds does not use `blank?` anymore, thus not depending on `active_support/core_ext/object/blank` https://github.com/github/github-ds/commit/a22c397eaaa00bb441fb4a0ecdf3e371daa9001a
 
 Fixes
 
