@@ -4,13 +4,13 @@
 
 Fixes
 
-* Replaces `requires` with `require_relative` also in github-ds https://github.com/github/github-ds/commit/67f0ea37bc1495e62b48b4c7b4ad72fad4f97a1a
+* Replaces `require` with `require_relative` also in github-ds https://github.com/github/github-ds/commit/67f0ea37bc1495e62b48b4c7b4ad72fad4f97a1a
 
 ## 0.2.5
 
 Fixes
 
-* Replaces `requires` with `require_relative` to avoid requirement errors
+* Replaces `require` with `require_relative` to avoid requirement errors
 when the gem is required inside the a "gihub" load path https://github.com/github/github-ds/commit/cb50e5318c911cf5bbf30fd07ca8ea93bfbf1c6d
 
 ## 0.2.4
