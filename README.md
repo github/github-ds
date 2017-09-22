@@ -41,7 +41,6 @@ Once you have created and executed the migration, KV can do neat things like thi
 
 ```ruby
 require "pp"
-require "github/kv"
 
 # Create new instance using ActiveRecord's default connection.
 kv = GitHub::KV.new { ActiveRecord::Base.connection }
