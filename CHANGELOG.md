@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.6
+
+Fixes
+
+* Replaces `requires` with `require_relative` also in github-ds https://github.com/github/github-ds/commit/67f0ea37bc1495e62b48b4c7b4ad72fad4f97a1a
+
 ## 0.2.5
 
 Fixes
