@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.5
+
+Fixes
+
+* Replaces `requires` with `require_relative` to avoid requirement errors
+when the gem is required inside the a "gihub" load path https://github.com/github/github-ds/commit/cb50e5318c911cf5bbf30fd07ca8ea93bfbf1c6d
+
 ## 0.2.4
 
 Additions

@@ -1,8 +1,8 @@
-require "github/ds/version"
+require_relative "ds/version"
 
 module GitHub
   module DS
   end
 end
 
-require "github/kv"
+require_relative "kv"
