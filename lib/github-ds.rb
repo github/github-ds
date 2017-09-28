@@ -1,1 +1,1 @@
-require "github/ds"
+require_relative "github/ds"
