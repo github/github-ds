@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.7
+
+Fixes
+
+* `GitHub::SQL#hash_results` now correctly returns an array of hashes on Rails 4+ rather than `ActiveRecord::Result`
+
 ## 0.2.6
 
 Fixes
