@@ -297,7 +297,7 @@ module GitHub
 
         when /\ASELECT/i
           # Why not execute or select_rows? Because select_all hits the query cache.
-          @hash_results = connection.select_all(query, "#{self.class.name} Select")
+          @hash_results = connection.select_all(query, "#{self.class.name} Select").to_ary
           @results = @hash_results.map(&:values)
 
         else
