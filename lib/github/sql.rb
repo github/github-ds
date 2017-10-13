@@ -1,4 +1,7 @@
 require "active_record"
+require "github/sql/literal"
+require "github/sql/rows"
+require "github/sql/errors"
 
 module GitHub
   # Public: Build and execute a SQL query, returning results as Arrays. This
@@ -31,42 +34,6 @@ module GitHub
   #   GitHub::SQL::ROWS(array_of_arrays).
   #
   class SQL
-
-    # Internal: a SQL literal value.
-    class Literal
-      # Public: the string value of this literal
-      attr_reader :value
-
-      def initialize(value)
-        @value = value.to_s.dup.freeze
-      end
-
-      def inspect
-        "<#{self.class.name} #{value}>"
-      end
-
-      def bytesize
-        value.bytesize
-      end
-    end
-
-    # Internal: a list of arrays of values for insertion into SQL.
-    class Rows
-      # Public: the Array of row values
-      attr_reader :values
-
-      def initialize(values)
-        unless values.all? { |v| v.is_a? Array }
-          raise ArgumentError, "cannot instantiate SQL rows with anything but arrays"
-        end
-        @values = values.dup.freeze
-      end
-
-      def inspect
-        "<#{self.class.name} #{values.inspect}>"
-      end
-    end
-
     # Public: Run inside a transaction
     def self.transaction
       ActiveRecord::Base.connection.transaction do
@@ -152,29 +119,6 @@ module GitHub
     # Returns an Array of values.
     def self.values(sql, bindings = {})
       new(sql, bindings).values
-    end
-
-    # Public: prepackaged literal values.
-    NULL = Literal.new "NULL"
-    NOW  = Literal.new "NOW()"
-
-    # Public: A superclass for errors.
-    class Error < RuntimeError
-    end
-
-    # Public: Raised when a bound ":keyword" value isn't available.
-    class BadBind < Error
-      def initialize(keyword)
-        super "There's no bind value for #{keyword.inspect}"
-      end
-    end
-
-    # Public: Raised when a bound value can't be sanitized.
-    class BadValue < Error
-      def initialize(value, description = nil)
-        description ||= "a #{value.class.name}"
-        super "Can't sanitize #{description}: #{value.inspect}"
-      end
     end
 
     # Internal: A Symbol-Keyed Hash of bind values.
@@ -287,6 +231,15 @@ module GitHub
       @found_rows
     end
 
+    # Internal: when a SQL_CALC_FOUND_ROWS clause is present in a SELECT query,
+    # retrieve the FOUND_ROWS() value to get a count of the rows sans any
+    # LIMIT/OFFSET clause.
+    def retrieve_found_row_count
+      if query =~ /\A\s*SELECT\s+SQL_CALC_FOUND_ROWS\s+/i
+        @found_rows = connection.select_value "SELECT FOUND_ROWS()", self.class.name
+      end
+    end
+
     # Public: The last inserted ID for this connection.
     def last_insert_id
       @last_insert_id || connection.raw_connection.last_insert_id
@@ -372,15 +325,6 @@ module GitHub
       results
 
       self
-    end
-
-    # Internal: when a SQL_CALC_FOUND_ROWS clause is present in a SELECT query,
-    # retrieve the FOUND_ROWS() value to get a count of the rows sans any
-    # LIMIT/OFFSET clause.
-    def retrieve_found_row_count
-      if query =~ /\A\s*SELECT\s+SQL_CALC_FOUND_ROWS\s+/i
-        @found_rows = connection.select_value "SELECT FOUND_ROWS()", self.class.name
-      end
     end
 
     # Public: Get the first column of the first row of results.
