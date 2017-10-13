@@ -447,6 +447,7 @@ module GitHub
 
     private
 
+    # Private: Forces ActiveRecord's default timezone for duration of block.
     def enforce_timezone(&block)
       begin
         if @force_tz
