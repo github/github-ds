@@ -174,18 +174,11 @@ module GitHub
 
       query << " " unless query.empty?
 
-      begin
-        if @force_tz
-          zone = ActiveRecord::Base.default_timezone
-          ActiveRecord::Base.default_timezone = @force_tz
-        end
-
+      enforce_timezone do
         query << interpolate(sql.strip, extras)
-
-        self
-      ensure
-        ActiveRecord::Base.default_timezone = zone if @force_tz
       end
+
+      self
     end
 
     # Public: Add a chunk of SQL to the query, unless query generated so far is empty.
@@ -279,12 +272,7 @@ module GitHub
       return @results if defined? @results
       return [] if frozen?
 
-      begin
-        if @force_tz
-          zone = ActiveRecord::Base.default_timezone
-          ActiveRecord::Base.default_timezone = @force_tz
-        end
-
+      enforce_timezone do
         case query
         when /\ADELETE/i
           @affected_rows = connection.delete(query, "#{self.class.name} Delete")
@@ -310,8 +298,6 @@ module GitHub
         freeze
 
         @results
-      ensure
-        ActiveRecord::Base.default_timezone = zone if @force_tz
       end
     end
 
@@ -457,6 +443,21 @@ module GitHub
     # Returns an Array or nil.
     def values
       results.map(&:first)
+    end
+
+    private
+
+    def enforce_timezone(&block)
+      begin
+        if @force_tz
+          zone = ActiveRecord::Base.default_timezone
+          ActiveRecord::Base.default_timezone = @force_tz
+        end
+
+        yield if block_given?
+      ensure
+        ActiveRecord::Base.default_timezone = zone if @force_tz
+      end
     end
   end
 end
