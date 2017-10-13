@@ -199,11 +199,6 @@ module GitHub
       add sql, extras
     end
 
-    # Public: The number of affected rows for this connection.
-    def affected_rows
-      @affected_rows || connection.raw_connection.affected_rows
-    end
-
     # Public: Add additional bind values to be interpolated each time SQL
     # is added to the query.
     #
@@ -220,6 +215,11 @@ module GitHub
     # initializing a new instance.
     def connection
       @connection || ActiveRecord::Base.connection
+    end
+
+    # Public: The number of affected rows for this connection.
+    def affected_rows
+      @affected_rows || connection.raw_connection.affected_rows
     end
 
     # Public: the number of rows found by the query.
