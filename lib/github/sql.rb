@@ -287,23 +287,6 @@ module GitHub
       @found_rows
     end
 
-    # Internal: Replace ":keywords" with sanitized values from binds or extras.
-    def interpolate(sql, extras = nil)
-      sql.gsub(/:[a-z][a-z0-9_]*/) do |raw|
-        sym = raw[1..-1].intern # O.o gensym
-
-        if extras && extras.include?(sym)
-          val = extras[sym]
-        elsif binds.include?(sym)
-          val = binds[sym]
-        end
-
-        raise BadBind.new raw if val.nil?
-
-        sanitize val
-      end
-    end
-
     # Public: The last inserted ID for this connection.
     def last_insert_id
       @last_insert_id || connection.raw_connection.last_insert_id
@@ -400,6 +383,40 @@ module GitHub
       end
     end
 
+    # Public: Get the first column of the first row of results.
+    def value
+      row && row.first
+    end
+
+    # Public: Is there a value?
+    def value?
+      !value.nil?
+    end
+
+    # Public: Get first column of every row of results.
+    #
+    # Returns an Array or nil.
+    def values
+      results.map(&:first)
+    end
+
+    # Internal: Replace ":keywords" with sanitized values from binds or extras.
+    def interpolate(sql, extras = nil)
+      sql.gsub(/:[a-z][a-z0-9_]*/) do |raw|
+        sym = raw[1..-1].intern # O.o gensym
+
+        if extras && extras.include?(sym)
+          val = extras[sym]
+        elsif binds.include?(sym)
+          val = binds[sym]
+        end
+
+        raise BadBind.new raw if val.nil?
+
+        sanitize val
+      end
+    end
+
     # Internal: Make `value` database-safe. Ish.
     def sanitize(value)
       case value
@@ -440,23 +457,6 @@ module GitHub
       else
         raise BadValue, value
       end
-    end
-
-    # Public: Get the first column of the first row of results.
-    def value
-      row && row.first
-    end
-
-    # Public: Is there a value?
-    def value?
-      !value.nil?
-    end
-
-    # Public: Get first column of every row of results.
-    #
-    # Returns an Array or nil.
-    def values
-      results.map(&:first)
     end
   end
 end
