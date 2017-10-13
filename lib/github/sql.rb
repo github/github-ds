@@ -103,6 +103,57 @@ module GitHub
       Rows.new(rows)
     end
 
+    # Public: Create and execute a new SQL query, ignoring results.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns self.
+    def self.run(sql, bindings = {})
+      new(sql, bindings).run
+    end
+
+    # Public: Create and execute a new SQL query, returning its hash_result rows.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns an Array of result hashes.
+    def self.hash_results(sql, bindings = {})
+      new(sql, bindings).hash_results
+    end
+
+    # Public: Create and execute a new SQL query, returning its result rows.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns an Array of result arrays.
+    def self.results(sql, bindings = {})
+      new(sql, bindings).results
+    end
+
+    # Public: Create and execute a new SQL query, returning the value of the
+    # first column of the first result row.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns a value or nil.
+    def self.value(sql, bindings = {})
+      new(sql, bindings).value
+    end
+
+    # Public: Create and execute a new SQL query, returning its values.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns an Array of values.
+    def self.values(sql, bindings = {})
+      new(sql, bindings).values
+    end
+
     # Public: prepackaged literal values.
     NULL = Literal.new "NULL"
     NOW  = Literal.new "NOW()"
@@ -347,57 +398,6 @@ module GitHub
       if query =~ /\A\s*SELECT\s+SQL_CALC_FOUND_ROWS\s+/i
         @found_rows = connection.select_value "SELECT FOUND_ROWS()", self.class.name
       end
-    end
-
-    # Public: Create and execute a new SQL query, ignoring results.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns self.
-    def self.run(sql, bindings = {})
-      new(sql, bindings).run
-    end
-
-    # Public: Create and execute a new SQL query, returning its hash_result rows.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns an Array of result hashes.
-    def self.hash_results(sql, bindings = {})
-      new(sql, bindings).hash_results
-    end
-
-    # Public: Create and execute a new SQL query, returning its result rows.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns an Array of result arrays.
-    def self.results(sql, bindings = {})
-      new(sql, bindings).results
-    end
-
-    # Public: Create and execute a new SQL query, returning the value of the
-    # first column of the first result row.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns a value or nil.
-    def self.value(sql, bindings = {})
-      new(sql, bindings).value
-    end
-
-    # Public: Create and execute a new SQL query, returning its values.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns an Array of values.
-    def self.values(sql, bindings = {})
-      new(sql, bindings).values
     end
 
     # Internal: Make `value` database-safe. Ish.
