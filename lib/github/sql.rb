@@ -302,17 +302,6 @@ module GitHub
       end
     end
 
-    # Public: If the query is a SELECT, return an array of hashes instead of an array of arrays.
-    def hash_results
-      results
-      @hash_results || @results
-    end
-
-    # Public: Get first row of results.
-    def row
-      results.first
-    end
-
     # Public: Execute, ignoring results. This is useful when the results of a
     # query aren't important, often INSERTs, UPDATEs, or DELETEs.
     #
@@ -325,6 +314,17 @@ module GitHub
       results
 
       self
+    end
+
+    # Public: If the query is a SELECT, return an array of hashes instead of an array of arrays.
+    def hash_results
+      results
+      @hash_results || @results
+    end
+
+    # Public: Get first row of results.
+    def row
+      results.first
     end
 
     # Public: Get the first column of the first row of results.
