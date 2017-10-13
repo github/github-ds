@@ -34,11 +34,12 @@ module GitHub
   #   GitHub::SQL::ROWS(array_of_arrays).
   #
   class SQL
-    # Public: Run inside a transaction
-    def self.transaction
-      ActiveRecord::Base.connection.transaction do
-        yield
-      end
+    # Public: Run inside a transaction. Class version of this method only works
+    # if only one connection is in use. If passing connections to
+    # GitHub::SQL#initialize or overriding connection then you'll need to use
+    # the instance version.
+    def self.transaction(options = {}, &block)
+      ActiveRecord::Base.connection.transaction(options, &block)
     end
 
     # Public: Instantiate a literal SQL value.
@@ -307,6 +308,11 @@ module GitHub
     # Returns an Array or nil.
     def values
       results.map(&:first)
+    end
+
+    # Public: Run inside a transaction for the connection.
+    def transaction(options = {}, &block)
+      connection.transaction(options, &block)
     end
 
     # Internal: The object we use to execute SQL and retrieve results. Defaults
