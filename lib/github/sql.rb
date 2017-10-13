@@ -210,41 +210,6 @@ module GitHub
       self
     end
 
-    # Internal: The object we use to execute SQL and retrieve results. Defaults
-    # to AR::B.connection, but can be overridden with a ":connection" key when
-    # initializing a new instance.
-    def connection
-      @connection || ActiveRecord::Base.connection
-    end
-
-    # Public: The number of affected rows for this connection.
-    def affected_rows
-      @affected_rows || connection.raw_connection.affected_rows
-    end
-
-    # Public: the number of rows found by the query.
-    #
-    # Returns FOUND_ROWS() if a SELECT query included SQL_CALC_FOUND_ROWS.
-    # Raises if SQL_CALC_FOUND_ROWS was not present in the query.
-    def found_rows
-      raise "no SQL_CALC_FOUND_ROWS clause present" unless defined? @found_rows
-      @found_rows
-    end
-
-    # Internal: when a SQL_CALC_FOUND_ROWS clause is present in a SELECT query,
-    # retrieve the FOUND_ROWS() value to get a count of the rows sans any
-    # LIMIT/OFFSET clause.
-    def retrieve_found_row_count
-      if query =~ /\A\s*SELECT\s+SQL_CALC_FOUND_ROWS\s+/i
-        @found_rows = connection.select_value "SELECT FOUND_ROWS()", self.class.name
-      end
-    end
-
-    # Public: The last inserted ID for this connection.
-    def last_insert_id
-      @last_insert_id || connection.raw_connection.last_insert_id
-    end
-
     # Public: Map each row to an instance of an ActiveRecord::Base subclass.
     def models(klass)
       return @models if defined? @models
@@ -342,6 +307,41 @@ module GitHub
     # Returns an Array or nil.
     def values
       results.map(&:first)
+    end
+
+    # Internal: The object we use to execute SQL and retrieve results. Defaults
+    # to AR::B.connection, but can be overridden with a ":connection" key when
+    # initializing a new instance.
+    def connection
+      @connection || ActiveRecord::Base.connection
+    end
+
+    # Public: The number of affected rows for this connection.
+    def affected_rows
+      @affected_rows || connection.raw_connection.affected_rows
+    end
+
+    # Public: the number of rows found by the query.
+    #
+    # Returns FOUND_ROWS() if a SELECT query included SQL_CALC_FOUND_ROWS.
+    # Raises if SQL_CALC_FOUND_ROWS was not present in the query.
+    def found_rows
+      raise "no SQL_CALC_FOUND_ROWS clause present" unless defined? @found_rows
+      @found_rows
+    end
+
+    # Internal: when a SQL_CALC_FOUND_ROWS clause is present in a SELECT query,
+    # retrieve the FOUND_ROWS() value to get a count of the rows sans any
+    # LIMIT/OFFSET clause.
+    def retrieve_found_row_count
+      if query =~ /\A\s*SELECT\s+SQL_CALC_FOUND_ROWS\s+/i
+        @found_rows = connection.select_value "SELECT FOUND_ROWS()", self.class.name
+      end
+    end
+
+    # Public: The last inserted ID for this connection.
+    def last_insert_id
+      @last_insert_id || connection.raw_connection.last_insert_id
     end
 
     # Internal: Replace ":keywords" with sanitized values from binds or extras.
