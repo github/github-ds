@@ -173,10 +173,7 @@ module GitHub
       return self if sql.nil? || sql.empty?
 
       query << " " unless query.empty?
-
-      enforce_timezone do
-        query << interpolate(sql.strip, extras)
-      end
+      query << interpolate(sql.strip, extras)
 
       self
     end
@@ -412,7 +409,9 @@ module GitHub
         connection.quote value.name
 
       when DateTime, Time, Date
-        connection.quote value.to_s(:db)
+        enforce_timezone do
+          connection.quote value.to_s(:db)
+        end
 
       when true
         connection.quoted_true
