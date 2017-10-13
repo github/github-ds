@@ -156,7 +156,7 @@ class GitHub::SQLTest < Minitest::Test
         GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
         raise "BOOM"
       end
-    rescue => e
+    rescue
       assert_equal 0, GitHub::SQL.new("Select count(*) from affected_rows_test").value
     else
       fail
