@@ -151,10 +151,10 @@ module GitHub
 
       @last_insert_id = nil
       @affected_rows  = nil
-      @binds      = binds ? binds.dup : {}
-      @query      = ""
-      @connection = @binds.delete :connection
-      @force_tz   = @binds.delete :force_timezone
+      @binds          = binds ? binds.dup : {}
+      @query          = ""
+      @connection     = @binds.delete :connection
+      @force_timezone = @binds.delete :force_timezone
 
       add query
     end
@@ -449,14 +449,14 @@ module GitHub
     # Private: Forces ActiveRecord's default timezone for duration of block.
     def enforce_timezone(&block)
       begin
-        if @force_tz
+        if @force_timezone
           zone = ActiveRecord::Base.default_timezone
-          ActiveRecord::Base.default_timezone = @force_tz
+          ActiveRecord::Base.default_timezone = @force_timezone
         end
 
         yield if block_given?
       ensure
-        ActiveRecord::Base.default_timezone = zone if @force_tz
+        ActiveRecord::Base.default_timezone = zone if @force_timezone
       end
     end
   end
