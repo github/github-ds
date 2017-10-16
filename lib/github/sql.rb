@@ -1,7 +1,4 @@
 require "active_record"
-require "github/sql/literal"
-require "github/sql/rows"
-require "github/sql/errors"
 
 module GitHub
   # Public: Build and execute a SQL query, returning results as Arrays. This
@@ -411,3 +408,7 @@ module GitHub
     end
   end
 end
+
+require "github/sql/literal"
+require "github/sql/rows"
+require "github/sql/errors"
