@@ -1,4 +1,7 @@
 require "active_record"
+require "github/sql/literal"
+require "github/sql/rows"
+require "github/sql/errors"
 
 module GitHub
   # Public: Build and execute a SQL query, returning results as Arrays. This
@@ -31,47 +34,12 @@ module GitHub
   #   GitHub::SQL::ROWS(array_of_arrays).
   #
   class SQL
-
-    # Internal: a SQL literal value.
-    class Literal
-      # Public: the string value of this literal
-      attr_reader :value
-
-      def initialize(value)
-        @value = value.to_s.dup.freeze
-      end
-
-      def inspect
-        "<#{self.class.name} #{value}>"
-      end
-
-      def bytesize
-        value.bytesize
-      end
-    end
-
-    # Internal: a list of arrays of values for insertion into SQL.
-    class Rows
-      # Public: the Array of row values
-      attr_reader :values
-
-      def initialize(values)
-        unless values.all? { |v| v.is_a? Array }
-          raise ArgumentError, "cannot instantiate SQL rows with anything but arrays"
-        end
-        @values = values.dup.freeze
-      end
-
-      def inspect
-        "<#{self.class.name} #{values.inspect}>"
-      end
-    end
-
-    # Public: Run inside a transaction
-    def self.transaction
-      ActiveRecord::Base.connection.transaction do
-        yield
-      end
+    # Public: Run inside a transaction. Class version of this method only works
+    # if only one connection is in use. If passing connections to
+    # GitHub::SQL#initialize or overriding connection then you'll need to use
+    # the instance version.
+    def self.transaction(options = {}, &block)
+      ActiveRecord::Base.connection.transaction(options, &block)
     end
 
     # Public: Instantiate a literal SQL value.
@@ -103,27 +71,55 @@ module GitHub
       Rows.new(rows)
     end
 
-    # Public: prepackaged literal values.
-    NULL = Literal.new "NULL"
-    NOW  = Literal.new "NOW()"
-
-    # Public: A superclass for errors.
-    class Error < RuntimeError
+    # Public: Create and execute a new SQL query, ignoring results.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns self.
+    def self.run(sql, bindings = {})
+      new(sql, bindings).run
     end
 
-    # Public: Raised when a bound ":keyword" value isn't available.
-    class BadBind < Error
-      def initialize(keyword)
-        super "There's no bind value for #{keyword.inspect}"
-      end
+    # Public: Create and execute a new SQL query, returning its hash_result rows.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns an Array of result hashes.
+    def self.hash_results(sql, bindings = {})
+      new(sql, bindings).hash_results
     end
 
-    # Public: Raised when a bound value can't be sanitized.
-    class BadValue < Error
-      def initialize(value, description = nil)
-        description ||= "a #{value.class.name}"
-        super "Can't sanitize #{description}: #{value.inspect}"
-      end
+    # Public: Create and execute a new SQL query, returning its result rows.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns an Array of result arrays.
+    def self.results(sql, bindings = {})
+      new(sql, bindings).results
+    end
+
+    # Public: Create and execute a new SQL query, returning the value of the
+    # first column of the first result row.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns a value or nil.
+    def self.value(sql, bindings = {})
+      new(sql, bindings).value
+    end
+
+    # Public: Create and execute a new SQL query, returning its values.
+    #
+    # sql      - A SQL string. See GitHub::SQL#add for details.
+    # bindings - Optional bind values. See GitHub::SQL#add for details.
+    #
+    # Returns an Array of values.
+    def self.values(sql, bindings = {})
+      new(sql, bindings).values
     end
 
     # Internal: A Symbol-Keyed Hash of bind values.
@@ -194,11 +190,6 @@ module GitHub
       add sql, extras
     end
 
-    # Public: The number of affected rows for this connection.
-    def affected_rows
-      @affected_rows || connection.raw_connection.affected_rows
-    end
-
     # Public: Add additional bind values to be interpolated each time SQL
     # is added to the query.
     #
@@ -208,44 +199,6 @@ module GitHub
     def bind(binds)
       self.binds.merge! binds
       self
-    end
-
-    # Internal: The object we use to execute SQL and retrieve results. Defaults
-    # to AR::B.connection, but can be overridden with a ":connection" key when
-    # initializing a new instance.
-    def connection
-      @connection || ActiveRecord::Base.connection
-    end
-
-    # Public: the number of rows found by the query.
-    #
-    # Returns FOUND_ROWS() if a SELECT query included SQL_CALC_FOUND_ROWS.
-    # Raises if SQL_CALC_FOUND_ROWS was not present in the query.
-    def found_rows
-      raise "no SQL_CALC_FOUND_ROWS clause present" unless defined? @found_rows
-      @found_rows
-    end
-
-    # Internal: Replace ":keywords" with sanitized values from binds or extras.
-    def interpolate(sql, extras = nil)
-      sql.gsub(/:[a-z][a-z0-9_]*/) do |raw|
-        sym = raw[1..-1].intern # O.o gensym
-
-        if extras && extras.include?(sym)
-          val = extras[sym]
-        elsif binds.include?(sym)
-          val = binds[sym]
-        end
-
-        raise BadBind.new raw if val.nil?
-
-        sanitize val
-      end
-    end
-
-    # Public: The last inserted ID for this connection.
-    def last_insert_id
-      @last_insert_id || connection.raw_connection.last_insert_id
     end
 
     # Public: Map each row to an instance of an ActiveRecord::Base subclass.
@@ -298,17 +251,6 @@ module GitHub
       end
     end
 
-    # Public: If the query is a SELECT, return an array of hashes instead of an array of arrays.
-    def hash_results
-      results
-      @hash_results || @results
-    end
-
-    # Public: Get first row of results.
-    def row
-      results.first
-    end
-
     # Public: Execute, ignoring results. This is useful when the results of a
     # query aren't important, often INSERTs, UPDATEs, or DELETEs.
     #
@@ -323,6 +265,60 @@ module GitHub
       self
     end
 
+    # Public: If the query is a SELECT, return an array of hashes instead of an array of arrays.
+    def hash_results
+      results
+      @hash_results || @results
+    end
+
+    # Public: Get first row of results.
+    def row
+      results.first
+    end
+
+    # Public: Get the first column of the first row of results.
+    def value
+      row && row.first
+    end
+
+    # Public: Is there a value?
+    def value?
+      !value.nil?
+    end
+
+    # Public: Get first column of every row of results.
+    #
+    # Returns an Array or nil.
+    def values
+      results.map(&:first)
+    end
+
+    # Public: Run inside a transaction for the connection.
+    def transaction(options = {}, &block)
+      connection.transaction(options, &block)
+    end
+
+    # Internal: The object we use to execute SQL and retrieve results. Defaults
+    # to AR::B.connection, but can be overridden with a ":connection" key when
+    # initializing a new instance.
+    def connection
+      @connection || ActiveRecord::Base.connection
+    end
+
+    # Public: The number of affected rows for this connection.
+    def affected_rows
+      @affected_rows || connection.raw_connection.affected_rows
+    end
+
+    # Public: the number of rows found by the query.
+    #
+    # Returns FOUND_ROWS() if a SELECT query included SQL_CALC_FOUND_ROWS.
+    # Raises if SQL_CALC_FOUND_ROWS was not present in the query.
+    def found_rows
+      raise "no SQL_CALC_FOUND_ROWS clause present" unless defined? @found_rows
+      @found_rows
+    end
+
     # Internal: when a SQL_CALC_FOUND_ROWS clause is present in a SELECT query,
     # retrieve the FOUND_ROWS() value to get a count of the rows sans any
     # LIMIT/OFFSET clause.
@@ -332,55 +328,26 @@ module GitHub
       end
     end
 
-    # Public: Create and execute a new SQL query, ignoring results.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns self.
-    def self.run(sql, bindings = {})
-      new(sql, bindings).run
+    # Public: The last inserted ID for this connection.
+    def last_insert_id
+      @last_insert_id || connection.raw_connection.last_insert_id
     end
 
-    # Public: Create and execute a new SQL query, returning its hash_result rows.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns an Array of result hashes.
-    def self.hash_results(sql, bindings = {})
-      new(sql, bindings).hash_results
-    end
+    # Internal: Replace ":keywords" with sanitized values from binds or extras.
+    def interpolate(sql, extras = nil)
+      sql.gsub(/:[a-z][a-z0-9_]*/) do |raw|
+        sym = raw[1..-1].intern # O.o gensym
 
-    # Public: Create and execute a new SQL query, returning its result rows.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns an Array of result arrays.
-    def self.results(sql, bindings = {})
-      new(sql, bindings).results
-    end
+        if extras && extras.include?(sym)
+          val = extras[sym]
+        elsif binds.include?(sym)
+          val = binds[sym]
+        end
 
-    # Public: Create and execute a new SQL query, returning the value of the
-    # first column of the first result row.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns a value or nil.
-    def self.value(sql, bindings = {})
-      new(sql, bindings).value
-    end
+        raise BadBind.new raw if val.nil?
 
-    # Public: Create and execute a new SQL query, returning its values.
-    #
-    # sql      - A SQL string. See GitHub::SQL#add for details.
-    # bindings - Optional bind values. See GitHub::SQL#add for details.
-    #
-    # Returns an Array of values.
-    def self.values(sql, bindings = {})
-      new(sql, bindings).values
+        sanitize val
+      end
     end
 
     # Internal: Make `value` database-safe. Ish.
@@ -425,23 +392,6 @@ module GitHub
       else
         raise BadValue, value
       end
-    end
-
-    # Public: Get the first column of the first row of results.
-    def value
-      row && row.first
-    end
-
-    # Public: Is there a value?
-    def value?
-      !value.nil?
-    end
-
-    # Public: Get first column of every row of results.
-    #
-    # Returns an Array or nil.
-    def values
-      results.map(&:first)
     end
 
     private

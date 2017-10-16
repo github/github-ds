@@ -147,7 +147,7 @@ class GitHub::SQLTest < Minitest::Test
     refute_includes sql.query, "foo"
   end
 
-  def test_transaction
+  def test_class_transaction
     GitHub::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
 
     begin
@@ -167,6 +167,69 @@ class GitHub::SQLTest < Minitest::Test
       GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
     end
     assert_equal 4, GitHub::SQL.new("Select count(*) from affected_rows_test").value
+  ensure
+    GitHub::SQL.run("DROP TABLE affected_rows_test")
+  end
+
+  def test_class_transaction_works_with_options
+    GitHub::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
+
+    begin
+      GitHub::SQL.transaction(requires_new: true) do
+        GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2)")
+        GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
+        raise "BOOM"
+      end
+    rescue
+      assert_equal 0, GitHub::SQL.new("Select count(*) from affected_rows_test").value
+    else
+      fail
+    end
+  ensure
+    GitHub::SQL.run("DROP TABLE affected_rows_test")
+  end
+
+  def test_transaction
+    GitHub::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
+
+    begin
+      sql = GitHub::SQL.new
+      sql.transaction do
+        GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2)")
+        GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
+        raise "BOOM"
+      end
+    rescue
+      assert_equal 0, GitHub::SQL.new("Select count(*) from affected_rows_test").value
+    else
+      fail
+    end
+
+    sql = GitHub::SQL.new
+    sql.transaction do
+      GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2)")
+      GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
+    end
+    assert_equal 4, GitHub::SQL.new("Select count(*) from affected_rows_test").value
+  ensure
+    GitHub::SQL.run("DROP TABLE affected_rows_test")
+  end
+
+  def test_transaction_works_with_options
+    GitHub::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
+
+    begin
+      sql = GitHub::SQL.new
+      sql.transaction(requires_new: true) do
+        GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2)")
+        GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
+        raise "BOOM"
+      end
+    rescue
+      assert_equal 0, GitHub::SQL.new("Select count(*) from affected_rows_test").value
+    else
+      fail
+    end
   ensure
     GitHub::SQL.run("DROP TABLE affected_rows_test")
   end
