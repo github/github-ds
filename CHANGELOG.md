@@ -1,6 +1,6 @@
 # Changelog
 
-## master
+## 0.2.8
 
 Fixes
 
