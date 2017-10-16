@@ -151,10 +151,10 @@ module GitHub
 
       @last_insert_id = nil
       @affected_rows  = nil
-      @binds      = binds ? binds.dup : {}
-      @query      = ""
-      @connection = @binds.delete :connection
-      @force_tz   = @binds.delete :force_timezone
+      @binds          = binds ? binds.dup : {}
+      @query          = ""
+      @connection     = @binds.delete :connection
+      @force_timezone = @binds.delete :force_timezone
 
       add query
     end
@@ -173,19 +173,9 @@ module GitHub
       return self if sql.nil? || sql.empty?
 
       query << " " unless query.empty?
+      query << interpolate(sql.strip, extras)
 
-      begin
-        if @force_tz
-          zone = ActiveRecord::Base.default_timezone
-          ActiveRecord::Base.default_timezone = @force_tz
-        end
-
-        query << interpolate(sql.strip, extras)
-
-        self
-      ensure
-        ActiveRecord::Base.default_timezone = zone if @force_tz
-      end
+      self
     end
 
     # Public: Add a chunk of SQL to the query, unless query generated so far is empty.
@@ -279,12 +269,7 @@ module GitHub
       return @results if defined? @results
       return [] if frozen?
 
-      begin
-        if @force_tz
-          zone = ActiveRecord::Base.default_timezone
-          ActiveRecord::Base.default_timezone = @force_tz
-        end
-
+      enforce_timezone do
         case query
         when /\ADELETE/i
           @affected_rows = connection.delete(query, "#{self.class.name} Delete")
@@ -310,8 +295,6 @@ module GitHub
         freeze
 
         @results
-      ensure
-        ActiveRecord::Base.default_timezone = zone if @force_tz
       end
     end
 
@@ -426,7 +409,9 @@ module GitHub
         connection.quote value.name
 
       when DateTime, Time, Date
-        connection.quote value.to_s(:db)
+        enforce_timezone do
+          connection.quote value.to_s(:db)
+        end
 
       when true
         connection.quoted_true
@@ -457,6 +442,22 @@ module GitHub
     # Returns an Array or nil.
     def values
       results.map(&:first)
+    end
+
+    private
+
+    # Private: Forces ActiveRecord's default timezone for duration of block.
+    def enforce_timezone(&block)
+      begin
+        if @force_timezone
+          zone = ActiveRecord::Base.default_timezone
+          ActiveRecord::Base.default_timezone = @force_timezone
+        end
+
+        yield if block_given?
+      ensure
+        ActiveRecord::Base.default_timezone = zone if @force_timezone
+      end
     end
   end
 end

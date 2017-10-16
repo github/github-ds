@@ -35,7 +35,7 @@ class GitHub::SQLTest < Minitest::Test
   def test_sanitize
     SANITIZE_TESTS.each do |input, expected|
       assert_equal expected, GitHub::SQL.new.sanitize(input),
-      "#{input.inspect} sanitizes as #{expected.inspect}"
+        "#{input.inspect} sanitizes as #{expected.inspect}"
     end
   end
 
@@ -156,7 +156,7 @@ class GitHub::SQLTest < Minitest::Test
         GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (3), (4)")
         raise "BOOM"
       end
-    rescue => e
+    rescue
       assert_equal 0, GitHub::SQL.new("Select count(*) from affected_rows_test").value
     else
       fail
