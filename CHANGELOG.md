@@ -1,5 +1,16 @@
 # Changelog
 
+## master
+
+Fixes
+
+* GitHub::SQL.transaction now takes options and passes them to ActiveRecord::Base.transaction.
+* Moved default time zone enforcement to sanitize from add. Makes it possible to use interpolate or sanitize and have correct time zone enforcement.
+
+Additions
+
+* Added GitHub::SQL#transaction instance method to match the class level one.
+
 ## 0.2.7
 
 Fixes
