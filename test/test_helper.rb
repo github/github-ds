@@ -9,13 +9,17 @@ require "timecop"
 require "minitest/autorun"
 require "mocha/mini_test"
 
-attempts = 0
-begin
+def connect(opts={})
   ActiveRecord::Base.establish_connection({
     adapter: "mysql2",
     username: "root",
-    database: "github_ds_test",
-  })
+    host: "127.0.0.1",
+  }.merge(opts))
+end
+
+attempts = 0
+begin
+  connect(database: "github_ds_test")
   ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `key_values`")
 
   # remove db tree if present so we can start fresh
@@ -33,10 +37,7 @@ begin
   CreateKeyValuesTable.up
 rescue
   raise if attempts >= 1
-  ActiveRecord::Base.establish_connection({
-    adapter: "mysql2",
-    username: "root",
-  })
+  connect
   ActiveRecord::Base.connection.execute("CREATE DATABASE IF NOT EXISTS `github_ds_test`")
   attempts += 1
   retry
