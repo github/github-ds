@@ -49,15 +49,17 @@ module GitHub
     ValueLengthError = Class.new(StandardError)
     UnavailableError = Class.new(StandardError)
 
-    class MissingConnectionError < StandardError; end
-
     def initialize(encapsulated_errors = [SystemCallError], &conn_block)
       @encapsulated_errors = encapsulated_errors
-      @conn_block = conn_block
+      @conn_block = conn_block || default_conn_block
     end
 
     def connection
-      @conn_block.try(:call) || (raise MissingConnectionError, "KV must be initialized with a block that returns a connection")
+      @conn_block.try(:call)
+    end
+
+    def default_conn_block
+      Proc.new { ActiveRecord::Base.connection }
     end
 
     # get :: String -> Result<String | nil>
