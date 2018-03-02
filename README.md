@@ -189,7 +189,9 @@ KV supports expiring keys and obeys expiration when performing operations, but d
 
 ## Development
 
-After checking out the repo, run `script/bootstrap` to install dependencies. Then, run `script/test` to run the tests. You can also run `script/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `script/bootstrap` to install dependencies.
+You will need a MySQL database with no password set for the root user, since the tests expect it. Running `docker-compose up` will boot just that.
+Then, run `script/test` to run the tests. You can also run `script/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `script/install`. To release a new version, update the version number in `version.rb`, commit, and then run `script/release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
