@@ -266,10 +266,10 @@ class GitHub::SQLTest < Minitest::Test
     begin
       GitHub::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
       GitHub::SQL.run("INSERT INTO affected_rows_test VALUES (1), (2), (3), (4)")
-      sql = GitHub::SQL.new("UPDATE affected_rows_test SET x = x + 1 WHERE 1 = '1x'")
-      sql.run
 
+      sql = GitHub::SQL.run("UPDATE IGNORE affected_rows_test SET x = x + 1 WHERE 1 = '1x'")
       assert_equal 4, sql.affected_rows
+      assert_equal 1, ActiveRecord::Base.connection.raw_connection.warning_count
     ensure
       GitHub::SQL.run("DROP TABLE affected_rows_test")
     end
