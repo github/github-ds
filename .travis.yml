@@ -1,12 +1,11 @@
 language: ruby
 rvm:
-  - 2.2.9
-  - 2.3.6
-  - 2.4.3
-  - 2.5.0
-before_script: gem install bundler -v 1.14.6
+  - 2.2
+  - 2.3
+  - 2.4
+  - 2.5
 script: bundle exec rake
 env:
-  - RAILS_VERSION=5.1.0
-  - RAILS_VERSION=5.0.0
-  - RAILS_VERSION=4.2.5
+  - RAILS_VERSION=5.1.5
+  - RAILS_VERSION=5.0.6
+  - RAILS_VERSION=4.2.10
