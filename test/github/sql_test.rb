@@ -269,7 +269,7 @@ class GitHub::SQLTest < Minitest::Test
 
       sql = GitHub::SQL.run("UPDATE IGNORE affected_rows_test SET x = x + 1 WHERE 1 = '1x'")
       assert_equal 4, sql.affected_rows
-      assert_equal 1, ActiveRecord::Base.connection.raw_connection.warning_count
+      assert_equal 1, sql.connection.raw_connection.warning_count
     ensure
       GitHub::SQL.run("DROP TABLE affected_rows_test")
     end
