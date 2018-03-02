@@ -123,14 +123,22 @@ class GitHub::SQLTest < Minitest::Test
   end
 
   def test_uses_ar_query_cache_when_selecting
-    first, second = nil
+    events = []
+    callback = lambda { |*args| events << ActiveSupport::Notifications::Event.new(*args) }
 
-    ActiveRecord::Base.cache do
-      first = GitHub::SQL.new("SELECT RAND()").value
-      second = GitHub::SQL.new("SELECT RAND()").value
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      ActiveRecord::Base.cache do
+        GitHub::SQL.new("SELECT RAND()").value
+        GitHub::SQL.new("SELECT RAND()").value
+      end
     end
 
-    assert_in_delta first, second
+    queries = events.reject { |event|
+      event.payload[:name] == "CACHE" || event.payload[:cached] == true
+    }
+    count = queries.size
+    assert_equal 1, count,
+      "Expected only 1 non-CACHE query from these: #{events.inspect}"
   end
 
   def test_add_unless_empty_adds_to_a_non_empty_query
