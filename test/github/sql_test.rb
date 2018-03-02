@@ -275,32 +275,6 @@ class GitHub::SQLTest < Minitest::Test
     end
   end
 
-  DEFINE_REPOSITORY = -> { class Repository < ActiveRecord::Base; end }
-  def test_models
-    begin
-      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
-      ActiveRecord::Base.connection.execute <<-SQL
-        CREATE TABLE `repositories` (
-          `id` int(11) NOT NULL AUTO_INCREMENT,
-          `name` varchar(255) DEFAULT NULL,
-          `updated_at` datetime DEFAULT NULL,
-          `created_at` datetime DEFAULT NULL,
-          PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-      SQL
-      DEFINE_REPOSITORY.call
-      Repository.create
-
-      repository = GitHub::SQL.new(<<-SQL).models(Repository).first
-        SELECT `repositories`.* FROM `repositories`
-      SQL
-
-      assert_kind_of Repository, repository
-    ensure
-      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
-    end
-  end
-
   def test_add_doesnt_modify_timezone_if_early_return_invoked
     begin
       original_default_timezone = ActiveRecord::Base.default_timezone
@@ -346,6 +320,34 @@ class GitHub::SQLTest < Minitest::Test
       assert_equal original_default_timezone, ActiveRecord::Base.default_timezone
     ensure
       ActiveRecord::Base.default_timezone = original_default_timezone
+      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
+    end
+  end
+end
+
+class GitHub::SQLModelTest < Minitest::Test
+  class Repository < ActiveRecord::Base; end
+
+  def test_models
+    begin
+      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
+      ActiveRecord::Base.connection.execute <<-SQL
+        CREATE TABLE `repositories` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `name` varchar(255) DEFAULT NULL,
+          `updated_at` datetime DEFAULT NULL,
+          `created_at` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      SQL
+      Repository.create
+
+      repository = GitHub::SQL.new(<<-SQL).models(Repository).first
+        SELECT `repositories`.* FROM `repositories`
+      SQL
+
+      assert_kind_of Repository, repository
+    ensure
       ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
     end
   end
