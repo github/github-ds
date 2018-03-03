@@ -6,11 +6,12 @@ class GitHub::KVTest < Minitest::Test
     @kv = GitHub::KV.new { ActiveRecord::Base.connection }
   end
 
-  def test_initialize_without_connection
-    kv = GitHub::KV.new
-    assert_raises GitHub::KV::MissingConnectionError do
-      kv.get("foo").value!
-    end
+  def test_default_connection_block
+    called = false
+    p = Proc.new { called = true }
+    GitHub::KV.any_instance.stubs(:default_conn_block).returns(p)
+    GitHub::KV.new.connection
+    assert(called)
   end
 
   def test_get_and_set
