@@ -167,7 +167,7 @@ class GitHub::KVTest < Minitest::Test
   end
 
   def test_ttl
-    assert_nil @kv.ttl("foo-ttl")
+    assert_nil @kv.ttl("foo-ttl").value!
 
     expires = 1.hour.from_now
     @kv.set("foo-ttl", "bar", expires: expires)
