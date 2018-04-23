@@ -166,6 +166,15 @@ class GitHub::KVTest < Minitest::Test
     assert_equal "bar2", @kv.get("foo").value!
   end
 
+  def test_ttl
+    assert_nil @kv.ttl("foo-ttl")
+
+    expires = 1.hour.from_now
+    @kv.set("foo-ttl", "bar", expires: expires)
+
+    assert_equal expires, @kv.ttl("foo-ttl").value!
+  end
+
   def test_type_checks_key
     assert_raises TypeError do
       @kv.get(0)
