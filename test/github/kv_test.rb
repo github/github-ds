@@ -177,6 +177,16 @@ class GitHub::KVTest < Minitest::Test
     assert_equal expires, @kv.ttl("foo-ttl").value!
   end
 
+  def test_ttl_for_key_that_exists_but_is_expired
+    @kv.set("foo-ttl", "bar", expires: 1.hour.ago)
+
+    row_count = GitHub::SQL.value <<-SQL, key: "foo-ttl"
+      SELECT count(*) FROM key_values WHERE `key` = :key
+    SQL
+    assert_equal 1, row_count
+    assert_nil @kv.ttl("foo-ttl").value!
+  end
+
   def test_type_checks_key
     assert_raises TypeError do
       @kv.get(0)
