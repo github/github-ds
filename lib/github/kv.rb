@@ -286,11 +286,10 @@ module GitHub
       validate_key(key)
 
       Result.new {
-        kvs = GitHub::SQL.results(<<-SQL, :keys => [key], :connection => connection).to_h
-          SELECT `key`, expires_at FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > NOW())
+        GitHub::SQL.value(<<-SQL, :key => key, :connection => connection)
+          SELECT expires_at FROM key_values
+          WHERE `key` = :key AND (expires_at IS NULL OR expires_at > NOW())
         SQL
-
-        kvs[key]
       }
     end
 
