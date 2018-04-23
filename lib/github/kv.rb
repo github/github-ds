@@ -270,6 +270,29 @@ module GitHub
       nil
     end
 
+    # ttl :: String -> Result<[Time | nil]>
+    #
+    # Returns the expires_at time for the specified key or nil.
+    #
+    # Example:
+    #
+    #  kv.ttl("foo")
+    #    # => #<Result value: 2018-04-23 11:34:54 +0200>
+    #
+    #  kv.ttl("foo")
+    #    # => #<Result value: nil>
+    #
+    def ttl(key)
+      validate_key(key)
+
+      Result.new {
+        GitHub::SQL.value(<<-SQL, :key => key, :connection => connection)
+          SELECT expires_at FROM key_values
+          WHERE `key` = :key AND (expires_at IS NULL OR expires_at > NOW())
+        SQL
+      }
+    end
+
   private
     def validate_key(key, error_message: nil)
       unless key.is_a?(String)
