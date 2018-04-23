@@ -4,6 +4,7 @@ require "rails/test_help"
 require "active_record"
 require "rails/generators/test_case"
 require "generators/github/ds/active_record_generator"
+require "mysql2"
 
 class GithubDSActiveRecordGeneratorTest < Rails::Generators::TestCase
   tests Github::Ds::Generators::ActiveRecordGenerator
