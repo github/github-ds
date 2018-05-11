@@ -21,10 +21,17 @@ module GitHub
   # * `nil` is always considered an error and not a usable value. If you need a
   #    SQL NULL, use the NULL constant instead.
   #
-  # * Identical column names in SELECTs will be overridden:
-  #   `SELECT t1.id, t2.id FROM...` will only return one value for `id`. To get
-  #   more than one column of the same name, use aliases:
+  # * Identical column names in SELECTs will be overridden for hash_results:
+  #   `SELECT t1.id, t2.id FROM...` will only return one value for `id`. The
+  #   second ID colum won't be included in the hash:
+  #
+  #   [{ "id" => "1" }]
+  #
+  #   To get more than one column of the same name, use aliases:
   #   `SELECT t1.id t1_id, t2.id t2_id FROM ...`
+  #
+  #   Calling `results` however will return an array with all the values:
+  #   [[1, 1]]
   #
   # * Arrays are escaped as `(item, item, item)`. If you need to insert multiple
   #   rows (Arrays of Arrays), you must specify the bind value using
@@ -232,9 +239,9 @@ module GitHub
 
         when /\ASELECT/i
           # Why not execute or select_rows? Because select_all hits the query cache.
-          @hash_results = connection.select_all(query, "#{self.class.name} Select").to_ary
-          @results = @hash_results.map(&:values)
-
+          ar_results = connection.select_all(query, "#{self.class.name} Select")
+          @hash_results = ar_results.to_ary
+          @results = ar_results.rows
         else
           @results = connection.execute(query, "#{self.class.name} Execute").to_a
         end

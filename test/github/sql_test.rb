@@ -365,4 +365,31 @@ class GitHub::SQLModelTest < Minitest::Test
       ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
     end
   end
+
+  def test_results_return_all_values_and_hash_returns_deduplicated_values
+    begin
+      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
+      ActiveRecord::Base.connection.execute <<-SQL
+        CREATE TABLE `repositories` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `name` varchar(255) DEFAULT NULL,
+          `updated_at` datetime DEFAULT NULL,
+          `created_at` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+      SQL
+      Repository.create(name: "I am a repo")
+
+      sql = GitHub::SQL.new(repo_id: 1)
+
+      sql.add("SELECT id, NULL, NULL, name from repositories")
+
+      assert_equal [1, nil, nil, "I am a repo"], sql.results.flatten
+
+      # Hashes can't have more than one key with the same name, so `to_ary` will de-dup the NULL column values
+      assert_equal [{ "id" => 1, "NULL" => nil, "name" => "I am a repo" }], sql.hash_results
+    ensure
+      ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
+    end
+  end
 end
