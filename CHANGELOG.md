@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9
+
+Fixes
+
+* Passing duplicate values to columns in a SQL statement (ex `SELECT id, NULL, NULL, name from repositories`) used to return an array of results with de-duplicated values. (ex `[[1, nil, "github"]]` instead of `[[1, nil, nil, "github"]]`. This had some unfortunate side-effects when parsing results so we changed the code to behave closer to `ActiveRecord::Result` objects. Now if you pass duplicated columns the `results` array will return all the values. The hash will only return unique columns because hashes cannot contain duplicate keys.
+
 ## 0.2.8
 
 Fixes
