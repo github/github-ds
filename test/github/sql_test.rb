@@ -7,12 +7,12 @@ class GitHub::SQLTest < Minitest::Test
     foo = GitHub::SQL::LITERAL "foo"
     rows = GitHub::SQL::ROWS [[1, 2], [3, 4]]
     SANITIZE_TESTS = [
-      [GitHub::SQL,    "'GitHub::SQL'"],
+      [GitHub::SQL,          "'GitHub::SQL'"],
       [DateTime.now.utc,     "'1970-01-01 00:00:00'"],
       [Time.now.utc,         "'1970-01-01 00:00:00'"],
       [Time.now.utc.to_date, "'1970-01-01'"],
-      [true,                 "1"],
-      [false,                "0"],
+      [true,                 "1", {"5.2.0" => "TRUE"}],
+      [false,                "0", {"5.2.0" => "FALSE"}],
       [17,                   "17"],
       [1.7,                  "1.7"],
       ["corge",              "'corge'"],
@@ -33,7 +33,13 @@ class GitHub::SQLTest < Minitest::Test
   end
 
   def test_sanitize
-    SANITIZE_TESTS.each do |input, expected|
+    SANITIZE_TESTS.each do |input, default, expected_by_version|
+      expected = if expected_by_version
+        expected_by_version.fetch(ENV["RAILS_VERSION"], default)
+      else
+        default
+      end
+
       assert_equal expected, GitHub::SQL.new.sanitize(input),
         "#{input.inspect} sanitizes as #{expected.inspect}"
     end
