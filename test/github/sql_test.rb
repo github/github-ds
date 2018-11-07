@@ -20,14 +20,13 @@ class GitHub::SQLTest < Minitest::Test
       [foo,                  "foo"],
       [[1, 2],               "(1, 2)"],
       [rows,                 "(1, 2), (3, 4)"], # bulk inserts
+      [nil,                  "NULL"],
     ]
 
     BAD_VALUE_TESTS = [
       Hash.new,
-      nil,
       [],
-      [1, 2, nil],
-      [[1], [nil]],
+      [[1]],
       [[1, 2], [3, 4]]
     ]
   end

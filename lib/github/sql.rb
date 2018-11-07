@@ -393,6 +393,9 @@ module GitHub
       when Symbol
         connection.quote value.to_s
 
+      when nil
+        GitHub::SQL::NULL.value
+
       else
         raise BadValue, value
       end
