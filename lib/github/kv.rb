@@ -136,6 +136,7 @@ module GitHub
       validate_expires(expires) if expires
 
       rows = kvs.map { |key, value|
+        value = value.is_a?(GitHub::SQL::Literal) ? value : GitHub::SQL::BINARY(value)
         [key, value, GitHub::SQL::NOW, GitHub::SQL::NOW, expires || GitHub::SQL::NULL]
       }
 
@@ -225,6 +226,7 @@ module GitHub
           DELETE FROM key_values WHERE `key` = :key AND expires_at <= NOW()
         SQL
 
+        value = value.is_a?(GitHub::SQL::Literal) ? value : GitHub::SQL::BINARY(value)
         sql = GitHub::SQL.run(<<-SQL, :key => key, :value => value, :expires => expires || GitHub::SQL::NULL, :connection => connection)
           INSERT IGNORE INTO key_values (`key`, value, created_at, updated_at, expires_at)
           VALUES (:key, :value, NOW(), NOW(), :expires)

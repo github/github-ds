@@ -1,11 +1,14 @@
 language: ruby
+before_install:
+  - gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true
+  - gem install bundler -v '<2'
 rvm:
-  - 2.2
   - 2.3
   - 2.4
   - 2.5
 script: bundle exec rake
 env:
+  - RAILS_VERSION=6.0.0.rc1
   - RAILS_VERSION=5.2.0
   - RAILS_VERSION=5.1.5
   - RAILS_VERSION=5.0.6
