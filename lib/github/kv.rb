@@ -93,8 +93,8 @@ module GitHub
       validate_key_array(keys)
 
       Result.new {
-        kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :connection => connection).to_h
-          SELECT `key`, value FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > NOW())
+        kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :now => Time.now, :connection => connection).to_h
+          SELECT `key`, value FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
 
         keys.map { |key| kvs[key] }
@@ -137,7 +137,7 @@ module GitHub
 
       rows = kvs.map { |key, value|
         value = value.is_a?(GitHub::SQL::Literal) ? value : GitHub::SQL::BINARY(value)
-        [key, value, GitHub::SQL::NOW, GitHub::SQL::NOW, expires || GitHub::SQL::NULL]
+        [key, value, Time.now, Time.now, expires || GitHub::SQL::NULL]
       }
 
       encapsulate_error do
@@ -186,8 +186,8 @@ module GitHub
       validate_key_array(keys)
 
       Result.new {
-        existing_keys = GitHub::SQL.values(<<-SQL, :keys => keys, :connection => connection).to_set
-          SELECT `key` FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > NOW())
+        existing_keys = GitHub::SQL.values(<<-SQL, :keys => keys, :now => Time.now, :connection => connection).to_set
+          SELECT `key` FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
 
         keys.map { |key| existing_keys.include?(key) }
@@ -222,14 +222,14 @@ module GitHub
         # achieve the same thing with the right INSERT ... ON DUPLICATE KEY UPDATE
         # query, but then we would not be able to rely on affected_rows
 
-        GitHub::SQL.run(<<-SQL, :key => key, :connection => connection)
-          DELETE FROM key_values WHERE `key` = :key AND expires_at <= NOW()
+        GitHub::SQL.run(<<-SQL, :key => key, :now => Time.now, :connection => connection)
+          DELETE FROM key_values WHERE `key` = :key AND expires_at <= :now
         SQL
 
         value = value.is_a?(GitHub::SQL::Literal) ? value : GitHub::SQL::BINARY(value)
-        sql = GitHub::SQL.run(<<-SQL, :key => key, :value => value, :expires => expires || GitHub::SQL::NULL, :connection => connection)
+        sql = GitHub::SQL.run(<<-SQL, :key => key, :value => value, :now => Time.now, :expires => expires || GitHub::SQL::NULL, :connection => connection)
           INSERT IGNORE INTO key_values (`key`, value, created_at, updated_at, expires_at)
-          VALUES (:key, :value, NOW(), NOW(), :expires)
+          VALUES (:key, :value, :now, :now, :expires)
         SQL
 
         sql.affected_rows > 0
@@ -288,9 +288,9 @@ module GitHub
       validate_key(key)
 
       Result.new {
-        GitHub::SQL.value(<<-SQL, :key => key, :connection => connection)
+        GitHub::SQL.value(<<-SQL, :key => key, :now => Time.now, :connection => connection)
           SELECT expires_at FROM key_values
-          WHERE `key` = :key AND (expires_at IS NULL OR expires_at > NOW())
+          WHERE `key` = :key AND (expires_at IS NULL OR expires_at > :now)
         SQL
       }
     end
