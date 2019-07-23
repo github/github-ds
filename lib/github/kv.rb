@@ -51,8 +51,24 @@ module GitHub
 
     class MissingConnectionError < StandardError; end
 
-    def initialize(encapsulated_errors = [SystemCallError], &conn_block)
+    attr_accessor :use_local_time
+
+    # initialize :: [Exception], Boolean, Proc -> nil
+    #
+    # Initialize a new KV instance.
+    #
+    # encapsulated_errors - An Array of Exception subclasses that, when raised,
+    #                       will be replaced with UnavailableError.
+    # use_local_time:     - Whether to use Ruby's `Time.now` instaed of MySQL's
+    #                       `NOW()` function. This is mostly useful in testing
+    #                       where time needs to be modified (eg. Timecop).
+    #                       Default false.
+    # &conn_block         - A block to call to open a new database connection.
+    #
+    # Returns nothing.
+    def initialize(encapsulated_errors = [SystemCallError], use_local_time: false, &conn_block)
       @encapsulated_errors = encapsulated_errors
+      @use_local_time = use_local_time
       @conn_block = conn_block
     end
 
@@ -93,7 +109,7 @@ module GitHub
       validate_key_array(keys)
 
       Result.new {
-        kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :now => Time.now, :connection => connection).to_h
+        kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :now => now, :connection => connection).to_h
           SELECT `key`, value FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
 
@@ -137,7 +153,7 @@ module GitHub
 
       rows = kvs.map { |key, value|
         value = value.is_a?(GitHub::SQL::Literal) ? value : GitHub::SQL::BINARY(value)
-        [key, value, Time.now, Time.now, expires || GitHub::SQL::NULL]
+        [key, value, now, now, expires || GitHub::SQL::NULL]
       }
 
       encapsulate_error do
@@ -186,7 +202,7 @@ module GitHub
       validate_key_array(keys)
 
       Result.new {
-        existing_keys = GitHub::SQL.values(<<-SQL, :keys => keys, :now => Time.now, :connection => connection).to_set
+        existing_keys = GitHub::SQL.values(<<-SQL, :keys => keys, :now => now, :connection => connection).to_set
           SELECT `key` FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
 
@@ -222,12 +238,12 @@ module GitHub
         # achieve the same thing with the right INSERT ... ON DUPLICATE KEY UPDATE
         # query, but then we would not be able to rely on affected_rows
 
-        GitHub::SQL.run(<<-SQL, :key => key, :now => Time.now, :connection => connection)
+        GitHub::SQL.run(<<-SQL, :key => key, :now => now, :connection => connection)
           DELETE FROM key_values WHERE `key` = :key AND expires_at <= :now
         SQL
 
         value = value.is_a?(GitHub::SQL::Literal) ? value : GitHub::SQL::BINARY(value)
-        sql = GitHub::SQL.run(<<-SQL, :key => key, :value => value, :now => Time.now, :expires => expires || GitHub::SQL::NULL, :connection => connection)
+        sql = GitHub::SQL.run(<<-SQL, :key => key, :value => value, :now => now, :expires => expires || GitHub::SQL::NULL, :connection => connection)
           INSERT IGNORE INTO key_values (`key`, value, created_at, updated_at, expires_at)
           VALUES (:key, :value, :now, :now, :expires)
         SQL
@@ -288,7 +304,7 @@ module GitHub
       validate_key(key)
 
       Result.new {
-        GitHub::SQL.value(<<-SQL, :key => key, :now => Time.now, :connection => connection)
+        GitHub::SQL.value(<<-SQL, :key => key, :now => now, :connection => connection)
           SELECT expires_at FROM key_values
           WHERE `key` = :key AND (expires_at IS NULL OR expires_at > :now)
         SQL
@@ -296,6 +312,10 @@ module GitHub
     end
 
   private
+    def now
+      use_local_time ? Time.now : GitHub::SQL::NOW
+    end
+
     def validate_key(key, error_message: nil)
       unless key.is_a?(String)
         raise TypeError, error_message || "key must be a String in #{self.class.name}, but was #{key.class}"
