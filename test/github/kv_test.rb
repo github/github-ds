@@ -214,4 +214,41 @@ class GitHub::KVTest < Minitest::Test
       @kv.set("foo", "💥" * 20000)
     end
   end
+
+  def test_timecop
+    with_local_time do
+      Timecop.freeze(1.month.ago) do
+        # setnx - currently unset
+        @kv.setnx("foo", "asdf", expires: 1.day.from_now.utc)
+        assert_equal "asdf", @kv.get("foo").value!
+
+        # setnx - currently expired
+        @kv.set("foo", "bar", expires: 1.day.ago.utc)
+        @kv.setnx("foo", "asdf", expires: 1.day.from_now.utc)
+        assert_equal "asdf", @kv.get("foo").value!
+
+        # set/get
+        @kv.set("foo", "bar", expires: 1.day.from_now.utc)
+        assert_equal "bar", @kv.get("foo").value!
+
+        # exists
+        assert_equal true, @kv.exists("foo").value!
+
+        # ttl
+        assert_equal 1.day.from_now.to_i, @kv.ttl("foo").value!.to_i
+
+        # mset/mget
+        @kv.mset({"foo" => "baz"}, expires: 1.day.from_now.utc)
+        assert_equal ["baz"], @kv.mget(["foo"]).value!
+      end
+    end
+  end
+
+  def with_local_time(&blk)
+    use_local_time_was = @kv.use_local_time
+    @kv.use_local_time = true
+    blk.call
+  ensure
+    @kv.use_local_time = use_local_time_was
+  end
 end
