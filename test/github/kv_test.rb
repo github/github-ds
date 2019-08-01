@@ -54,6 +54,42 @@ class GitHub::KVTest < Minitest::Test
     end
   end
 
+  def test_increment_default_value
+    result = @kv.increment("foo")
+
+    assert_equal 1, result
+  end
+
+  def test_increment_large_value
+    result = @kv.increment("foo", amount: 10000)
+
+    assert_equal 10000, result
+  end
+
+  def test_increment_multiple
+    @kv.increment("foo")
+    result = @kv.increment("foo", amount: 2)
+
+    assert_equal 3, result
+  end
+
+  def test_increment_existing
+    @kv.set("foo", "1")
+
+    result = @kv.increment("foo")
+
+    assert_equal 2, result
+  end
+
+  # TODO: handle non-integer values properly
+  def test_increment_non_integer
+    @kv.set("foo", "bar")
+
+    assert_raises GitHub::KV::InvalidValueError do
+      @kv.increment("foo")
+    end
+  end
+
   def test_exists
     assert_equal false, @kv.exists("foo").value!
 

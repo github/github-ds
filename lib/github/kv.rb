@@ -48,6 +48,7 @@ module GitHub
     KeyLengthError = Class.new(StandardError)
     ValueLengthError = Class.new(StandardError)
     UnavailableError = Class.new(StandardError)
+    InvalidValueError = Class.new(StandardError)
 
     class MissingConnectionError < StandardError; end
 
@@ -250,6 +251,32 @@ module GitHub
 
         sql.affected_rows > 0
       }
+    end
+
+    # increment :: String, Integer, expires: Time? -> Integer
+    #
+    # Increment the key's value by an amount.
+    #
+    # key     - The key to increment.
+    # amount  - The amount to increment the key's value by.
+    # expires - When the key should expire.
+    #
+    # Returns the key's value after incrementing.
+    def increment(key, amount: 1, expires: nil)
+      sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires || GitHub::SQL::NULL, connection: connection)
+        INSERT INTO key_values (`key`, value, created_at, updated_at, expires_at)
+        VALUES(:key, :amount, :now, :now, :expires)
+        ON DUPLICATE KEY UPDATE
+          `value`=LAST_INSERT_ID(IF(
+            `expires_at` IS NULL OR `expires_at`>=NOW(),
+            `value`+:amount,
+            :amount
+          )),
+          `updated_at`=:now,
+          `expires_at`=:expires
+      SQL
+
+      sql.affected_rows == 1 ? amount : sql.last_insert_id
     end
 
     # del :: String -> nil
