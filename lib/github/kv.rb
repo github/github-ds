@@ -264,19 +264,37 @@ module GitHub
     # Returns the key's value after incrementing.
     def increment(key, amount: 1, expires: nil)
       sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires || GitHub::SQL::NULL, connection: connection)
-        INSERT INTO key_values (`key`, value, created_at, updated_at, expires_at)
+        INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
         VALUES(:key, :amount, :now, :now, :expires)
         ON DUPLICATE KEY UPDATE
-          `value`=LAST_INSERT_ID(IF(
-            `expires_at` IS NULL OR `expires_at`>=NOW(),
-            `value`+:amount,
-            :amount
-          )),
-          `updated_at`=:now,
-          `expires_at`=:expires
+          `value`=IF(
+            concat('',`value`*1) = `value`,
+            LAST_INSERT_ID(IF(
+              `expires_at` IS NULL OR `expires_at`>=NOW(),
+              `value`+:amount,
+              :amount
+            )),
+            `value`
+          ),
+          `updated_at`=IF(
+            concat('',`value`*1) = `value`,
+            :now,
+            `updated_at`
+          ),
+          `expires_at`=IF(
+            concat('',`value`*1) = `value`,
+            :expires,
+            `expires_at`
+          )
       SQL
 
-      sql.affected_rows == 1 ? amount : sql.last_insert_id
+      if sql.last_insert_id == 0
+        raise InvalidValueError
+      elsif sql.affected_rows == 1
+        amount
+      else
+        sql.last_insert_id
+      end
     end
 
     # del :: String -> nil

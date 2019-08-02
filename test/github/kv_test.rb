@@ -88,6 +88,7 @@ class GitHub::KVTest < Minitest::Test
     assert_raises GitHub::KV::InvalidValueError do
       @kv.increment("foo")
     end
+    assert_equal "bar", @kv.get("foo").value!
   end
 
   def test_exists
