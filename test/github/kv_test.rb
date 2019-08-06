@@ -68,6 +68,13 @@ class GitHub::KVTest < Minitest::Test
 
   def test_increment_multiple
     @kv.increment("foo")
+    result = @kv.increment("foo")
+
+    assert_equal 2, result
+  end
+
+  def test_increment_multiple_different_values
+    @kv.increment("foo")
     result = @kv.increment("foo", amount: 2)
 
     assert_equal 3, result
@@ -81,7 +88,6 @@ class GitHub::KVTest < Minitest::Test
     assert_equal 2, result
   end
 
-  # TODO: handle non-integer values properly
   def test_increment_non_integer
     @kv.set("foo", "bar")
 
