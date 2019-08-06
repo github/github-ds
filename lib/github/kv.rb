@@ -263,7 +263,7 @@ module GitHub
     #
     # Returns the key's value after incrementing.
     def increment(key, amount: 1, expires: nil)
-      raise ArgumentError.new("The amount specified must be an integer") unless 1.is_a? Integer
+      raise ArgumentError.new("The amount specified must be an integer") unless amount.is_a? Integer
       raise ArgumentError.new("The amount specified my be > 0") if amount < 1
 
       # This query uses a few MySQL "hacks" to ensure that the incrementing
