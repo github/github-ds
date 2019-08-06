@@ -305,6 +305,18 @@ module GitHub
           )
       SQL
 
+      # Check if MySQL connection parameter CLIENT_FOUND_ROWS is set. If it is
+      # to check for invalid values we must use a workaround via the last_insert_id
+      # From the MySQL docs:
+      #
+      # If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API
+      # function when connecting to mysqld, the affected-rows value is 1 (not 0)
+      # if an existing row is set to its current values.
+      # https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+      flags = connection.raw_connection.query_options[:flags]
+      check = Mysql2::Client::FOUND_ROWS
+      found_rows_is_set = flags & check == check
+
       # The ordering of these statements is extremely important if we are to
       # support incrementing a negative amount. The checks occur in this order:
       # 1. Check if an update with new values occured? If so return the result
@@ -317,7 +329,7 @@ module GitHub
         # An update took place in which data changed. We use a hack to set
         # the last insert ID to be the new value.
         sql.last_insert_id
-      elsif sql.last_insert_id == 0
+      elsif sql.affected_rows == 0 || (found_rows_is_set && sql.affected_rows == 1 && sql.last_insert_id == 0)
         # No inert took place nor did any update occur. This means that
         # the value was not an integer thus not incremented.
         raise InvalidValueError
