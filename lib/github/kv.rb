@@ -263,14 +263,13 @@ module GitHub
     #
     # Returns the key's value after incrementing.
     def increment(key, amount: 1, expires: GitHub::SQL::NULL)
-      raise ArgumentError.new("The amount specified must be an integer") unless 1.is_a? Integer
-      raise ArgumentError.new("The amount specified my be > 0") if amount < 1
+      raise ArgumentError.new("The amount specified must be an integer") unless amount.is_a? Integer
 
       # This query uses a few MySQL "hacks" to ensure that the incrementing
       # is done atomically and the value is returned. The first trick is done
       # using the `LAST_INSERT_ID` function. This allows us to manually set
       # the LAST_INSERT_ID returned by the query. Here we are able to set it
-      # to the new value when an increment takes place, essentally allowing us
+      # to the new value when an increment takes place, essentially allowing us
       # to do: `UPDATE...;SELECT value from key_value where key=:key` in a
       # single step.
       #
@@ -306,6 +305,14 @@ module GitHub
           )
       SQL
 
+      # The ordering of these statements is extremely important if we are to
+      # support incrementing a negative amount. The checks occur in this order:
+      # 1. Check if an update with new values occured? If so return the result
+      #    This could potentially result in `sql.last_insert_id` with a value
+      #    of 0, thus it must be before the second check.
+      # 2. Check if an update took place but nothing changed (I.E. no new value
+      #    was set)
+      # 3. Check if an insert took place.
       if sql.affected_rows == 2
         # An update took place in which data changed. We use a hack to set
         # the last insert ID to be the new value.

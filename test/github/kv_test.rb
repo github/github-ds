@@ -66,6 +66,19 @@ class GitHub::KVTest < Minitest::Test
     assert_equal 10000, result
   end
 
+  def test_increment_negative
+    result = @kv.increment("foo", amount: -1)
+
+    assert_equal -1, result
+  end
+
+  def test_increment_negative_to_0
+    @kv.set("foo", "1")
+    result = @kv.increment("foo", amount: -1)
+
+    assert_equal 0, result
+  end
+
   def test_increment_multiple
     @kv.increment("foo")
     result = @kv.increment("foo")
@@ -88,7 +101,7 @@ class GitHub::KVTest < Minitest::Test
     assert_equal 2, result
   end
 
-  def test_increment_non_integer
+  def test_increment_non_integer_key_value
     @kv.set("foo", "bar")
 
     assert_raises GitHub::KV::InvalidValueError do
@@ -100,12 +113,6 @@ class GitHub::KVTest < Minitest::Test
   def test_increment_only_accepts_integer_amounts
     assert_raises ArgumentError do
       @kv.increment("foo", amount: "bar")
-    end
-  end
-
-  def test_increment_only_accepts_positive_amounts
-    assert_raises ArgumentError do
-      @kv.increment("foo", amount: -1)
     end
   end
 
