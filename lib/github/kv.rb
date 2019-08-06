@@ -306,24 +306,19 @@ module GitHub
           )
       SQL
 
-      if sql.affected_rows == 1
-        # If the number of affected_rows is 1 then a new value was inserted
-        # thus we can just return the amount given to us since that is the
-        # value at the key
-        amount
+      if sql.affected_rows == 2
+        # An update took place in which data changed. We use a hack to set
+        # the last insert ID to be the new value.
+        sql.last_insert_id
       elsif sql.last_insert_id == 0
         # No inert took place nor did any update occur. This means that
         # the value was not an integer thus not incremented.
         raise InvalidValueError
-      else
-        # This last condidition only occurs when:
-        # 1. An insert did NOT occur
-        # 2. The value at the key did change
-        #
-        # Thus the value must have been incremented successfully. Using the
-        # LAST_INSERT_ID trick we are able to determine the new value and
-        # return it.
-        sql.last_insert_id
+      elsif sql.affected_rows == 1
+        # If the number of affected_rows is 1 then a new value was inserted
+        # thus we can just return the amount given to us since that is the
+        # value at the key
+        amount
       end
     end
 
