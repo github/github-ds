@@ -263,6 +263,9 @@ module GitHub
     #
     # Returns the key's value after incrementing.
     def increment(key, amount: 1, expires: nil)
+      raise ArgumentError.new("The amount specified must be an integer") unless 1.is_a? Integer
+      raise ArgumentError.new("The amount specified my be > 0") if amount < 1
+
       sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires || GitHub::SQL::NULL, connection: connection)
         INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
         VALUES(:key, :amount, :now, :now, :expires)

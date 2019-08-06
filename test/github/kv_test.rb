@@ -97,6 +97,18 @@ class GitHub::KVTest < Minitest::Test
     assert_equal "bar", @kv.get("foo").value!
   end
 
+  def test_increment_only_accepts_integer_amounts
+    assert_raises ArgumentError do
+      @kv.increment("foo", amount: "bar")
+    end
+  end
+
+  def test_increment_only_accepts_positive_amounts
+    assert_raises ArgumentError do
+      @kv.increment("foo", amount: -1)
+    end
+  end
+
   def test_exists
     assert_equal false, @kv.exists("foo").value!
 
