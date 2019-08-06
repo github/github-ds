@@ -306,15 +306,15 @@ module GitHub
           )
       SQL
 
-      if sql.last_insert_id == 0
-        # No inert took place nor did any update occur. This means that
-        # the value was not an integer thus not incremented.
-        raise InvalidValueError
-      elsif sql.affected_rows == 1
+      if sql.affected_rows == 1
         # If the number of affected_rows is 1 then a new value was inserted
         # thus we can just return the amount given to us since that is the
         # value at the key
         amount
+      elsif sql.last_insert_id == 0
+        # No inert took place nor did any update occur. This means that
+        # the value was not an integer thus not incremented.
+        raise InvalidValueError
       else
         # This last condidition only occurs when:
         # 1. An insert did NOT occur
