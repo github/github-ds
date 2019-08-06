@@ -266,6 +266,21 @@ module GitHub
       raise ArgumentError.new("The amount specified must be an integer") unless 1.is_a? Integer
       raise ArgumentError.new("The amount specified my be > 0") if amount < 1
 
+      # This query uses a few MySQL "hacks" to ensure that the incrementing
+      # is done atomically and the value is returned. The first trick is done
+      # using the `LAST_INSERT_ID` function. This allows us to manually set
+      # the LAST_INSERT_ID returned by the query. Here we are able to set it
+      # to the new value when an increment takes place, essentally allowing us
+      # to do: `UPDATE...;SELECT value from key_value where key=:key` in a
+      # single step.
+      #
+      # However the `LAST_INSERT_ID` trick is only used when the value is
+      # updated. Upon a fresh insert we know the amount is going to be set
+      # to the amount specified.
+      #
+      # Lastly we only do these tricks when the value at the key is and integer.
+      # If the value is not an integer the update ensures the values remain the
+      # same and we raise an error.
       sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires || GitHub::SQL::NULL, connection: connection)
         INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
         VALUES(:key, :amount, :now, :now, :expires)
@@ -292,10 +307,22 @@ module GitHub
       SQL
 
       if sql.last_insert_id == 0
+        # No inert took place nor did any update occur. This means that
+        # the value was not an integer thus not incremented.
         raise InvalidValueError
       elsif sql.affected_rows == 1
+        # If the number of affected_rows is 1 then a new value was inserted
+        # thus we can just return the amount given to us since that is the
+        # value at the key
         amount
       else
+        # This last condidition only occurs when:
+        # 1. An insert did NOT occur
+        # 2. The value at the key did change
+        #
+        # Thus the value must have been incremented successfully. Using the
+        # LAST_INSERT_ID trick we are able to determine the new value and
+        # return it.
         sql.last_insert_id
       end
     end
