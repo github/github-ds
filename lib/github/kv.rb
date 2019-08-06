@@ -262,7 +262,7 @@ module GitHub
     # expires - When the key should expire.
     #
     # Returns the key's value after incrementing.
-    def increment(key, amount: 1, expires: nil)
+    def increment(key, amount: 1, expires: GitHub::SQL::NULL)
       raise ArgumentError.new("The amount specified must be an integer") unless 1.is_a? Integer
       raise ArgumentError.new("The amount specified my be > 0") if amount < 1
 
@@ -281,7 +281,7 @@ module GitHub
       # Lastly we only do these tricks when the value at the key is and integer.
       # If the value is not an integer the update ensures the values remain the
       # same and we raise an error.
-      sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires || GitHub::SQL::NULL, connection: connection)
+      sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires, connection: connection)
         INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
         VALUES(:key, :amount, :now, :now, :expires)
         ON DUPLICATE KEY UPDATE
