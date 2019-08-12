@@ -317,7 +317,7 @@ module GitHub
       # if an existing row is set to its current values.
       # https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
       flags = connection.raw_connection.query_options[:flags]
-      check = Mysql2::Client::FOUND_ROWS
+      check = ::Mysql2::Client::FOUND_ROWS
       found_rows_is_set = flags & check == check
 
       # The ordering of these statements is extremely important if we are to
