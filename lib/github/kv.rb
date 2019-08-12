@@ -317,7 +317,11 @@ module GitHub
       # if an existing row is set to its current values.
       # https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
       flags = connection.raw_connection.query_options[:flags]
-      check = ::Mysql2::Client::FOUND_ROWS
+
+      # The flag is Mysql2::Client::FOUND_ROWS however older versions of the Mysql2
+      # library don't explicitly define the FOUND_ROWS const. The value of the const
+      # is 1<<1 (2)
+      check = 1 << 1
       found_rows_is_set = flags & check == check
 
       # The ordering of these statements is extremely important if we are to
