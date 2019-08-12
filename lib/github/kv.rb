@@ -259,11 +259,14 @@ module GitHub
     #
     # key     - The key to increment.
     # amount  - The amount to increment the key's value by.
+    #           The user can increment by both positive and
+    #           negative values
     # expires - When the key should expire.
     #
     # Returns the key's value after incrementing.
     def increment(key, amount: 1, expires: GitHub::SQL::NULL)
       raise ArgumentError.new("The amount specified must be an integer") unless amount.is_a? Integer
+      raise ArgumentError.new("The amount specified cannot be 0") if amount == 0
 
       # This query uses a few MySQL "hacks" to ensure that the incrementing
       # is done atomically and the value is returned. The first trick is done
