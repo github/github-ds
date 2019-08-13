@@ -290,7 +290,7 @@ module GitHub
           `value`=IF(
             concat('',`value`*1) = `value`,
             LAST_INSERT_ID(IF(
-              `expires_at` IS NULL OR `expires_at`>=NOW(),
+              `expires_at` IS NULL OR `expires_at`>=:now,
               `value`+:amount,
               :amount
             )),
