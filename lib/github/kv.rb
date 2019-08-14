@@ -410,6 +410,28 @@ module GitHub
       }
     end
 
+    # mttl :: [String] -> Result<[Time | nil]>
+    #
+    # Returns the expires_at time for the specified key or nil.
+    #
+    # Example:
+    #
+    #  kv.mttl(["foo", "octocat"])
+    #    # => #<Result value: [2018-04-23 11:34:54 +0200, nil]>
+    #
+    def mttl(keys)
+      validate_keys(key)
+
+      Result.new {
+        kvs = GitHub::SQL.value(<<-SQL, :keys => keys, :now => now, :connection => connection).to_h
+          SELECT expires_at FROM key_values
+          WHERE `key` in :keys AND (expires_at IS NULL OR expires_at > :now)
+        SQL
+
+        keys.map{ |key| kvs[key] }
+      }
+    end
+
   private
     def now
       use_local_time ? Time.now : GitHub::SQL::NOW
