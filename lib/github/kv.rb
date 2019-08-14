@@ -265,8 +265,9 @@ module GitHub
     #
     # Returns the key's value after incrementing.
     def increment(key, amount: 1, expires: GitHub::SQL::NULL)
-      raise ArgumentError.new("The amount specified must be an integer") unless amount.is_a? Integer
-      raise ArgumentError.new("The amount specified cannot be 0") if amount == 0
+      validate_key(key)
+      validate_amount(amount)
+      validate_expires(expires)
 
       # This query uses a few MySQL "hacks" to ensure that the incrementing
       # is done atomically and the value is returned. The first trick is done
@@ -463,6 +464,11 @@ module GitHub
       if value.bytesize > MAX_VALUE_LENGTH
         raise ValueLengthError, "value of length #{value.length} exceeds maximum value length of #{MAX_VALUE_LENGTH}"
       end
+    end
+
+    def validate_amount(amount)
+      raise ArgumentError.new("The amount specified must be an integer") unless amount.is_a? Integer
+      raise ArgumentError.new("The amount specified cannot be 0") if amount == 0
     end
 
     def validate_expires(expires)
