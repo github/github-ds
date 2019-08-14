@@ -284,69 +284,71 @@ module GitHub
       # Lastly we only do these tricks when the value at the key is and integer.
       # If the value is not an integer the update ensures the values remain the
       # same and we raise an error.
-      sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires, connection: connection)
-        INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
-        VALUES(:key, :amount, :now, :now, :expires)
-        ON DUPLICATE KEY UPDATE
-          `value`=IF(
-            concat('',`value`*1) = `value`,
-            LAST_INSERT_ID(IF(
-              `expires_at` IS NULL OR `expires_at`>=:now,
-              `value`+:amount,
-              :amount
-            )),
-            `value`
-          ),
-          `updated_at`=IF(
-            concat('',`value`*1) = `value`,
-            :now,
-            `updated_at`
-          ),
-          `expires_at`=IF(
-            concat('',`value`*1) = `value`,
-            :expires,
-            `expires_at`
-          )
-      SQL
+      encapsulate_error {
+        sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires, connection: connection)
+          INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
+          VALUES(:key, :amount, :now, :now, :expires)
+          ON DUPLICATE KEY UPDATE
+            `value`=IF(
+              concat('',`value`*1) = `value`,
+              LAST_INSERT_ID(IF(
+                `expires_at` IS NULL OR `expires_at`>=:now,
+                `value`+:amount,
+                :amount
+              )),
+              `value`
+            ),
+            `updated_at`=IF(
+              concat('',`value`*1) = `value`,
+              :now,
+              `updated_at`
+            ),
+            `expires_at`=IF(
+              concat('',`value`*1) = `value`,
+              :expires,
+              `expires_at`
+            )
+        SQL
 
-      # Check if MySQL connection parameter CLIENT_FOUND_ROWS is set. If it is
-      # to check for invalid values we must use a workaround via the last_insert_id
-      # From the MySQL docs:
-      #
-      # If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API
-      # function when connecting to mysqld, the affected-rows value is 1 (not 0)
-      # if an existing row is set to its current values.
-      # https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
-      flags = connection.raw_connection.query_options[:flags]
+        # Check if MySQL connection parameter CLIENT_FOUND_ROWS is set. If it is
+        # to check for invalid values we must use a workaround via the last_insert_id
+        # From the MySQL docs:
+        #
+        # If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API
+        # function when connecting to mysqld, the affected-rows value is 1 (not 0)
+        # if an existing row is set to its current values.
+        # https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+        flags = connection.raw_connection.query_options[:flags]
 
-      # The flag is Mysql2::Client::FOUND_ROWS however older versions of the Mysql2
-      # library don't explicitly define the FOUND_ROWS const. The value of the const
-      # is 1<<1 (2)
-      check = 1 << 1
-      found_rows_is_set = flags & check == check
+        # The flag is Mysql2::Client::FOUND_ROWS however older versions of the Mysql2
+        # library don't explicitly define the FOUND_ROWS const. The value of the const
+        # is 1<<1 (2)
+        check = 1 << 1
+        found_rows_is_set = flags & check == check
 
-      # The ordering of these statements is extremely important if we are to
-      # support incrementing a negative amount. The checks occur in this order:
-      # 1. Check if an update with new values occured? If so return the result
-      #    This could potentially result in `sql.last_insert_id` with a value
-      #    of 0, thus it must be before the second check.
-      # 2. Check if an update took place but nothing changed (I.E. no new value
-      #    was set)
-      # 3. Check if an insert took place.
-      if sql.affected_rows == 2
-        # An update took place in which data changed. We use a hack to set
-        # the last insert ID to be the new value.
-        sql.last_insert_id
-      elsif sql.affected_rows == 0 || (found_rows_is_set && sql.affected_rows == 1 && sql.last_insert_id == 0)
-        # No inert took place nor did any update occur. This means that
-        # the value was not an integer thus not incremented.
-        raise InvalidValueError
-      elsif sql.affected_rows == 1
-        # If the number of affected_rows is 1 then a new value was inserted
-        # thus we can just return the amount given to us since that is the
-        # value at the key
-        amount
-      end
+        # The ordering of these statements is extremely important if we are to
+        # support incrementing a negative amount. The checks occur in this order:
+        # 1. Check if an update with new values occured? If so return the result
+        #    This could potentially result in `sql.last_insert_id` with a value
+        #    of 0, thus it must be before the second check.
+        # 2. Check if an update took place but nothing changed (I.E. no new value
+        #    was set)
+        # 3. Check if an insert took place.
+        if sql.affected_rows == 2
+          # An update took place in which data changed. We use a hack to set
+          # the last insert ID to be the new value.
+          sql.last_insert_id
+        elsif sql.affected_rows == 0 || (found_rows_is_set && sql.affected_rows == 1 && sql.last_insert_id == 0)
+          # No inert took place nor did any update occur. This means that
+          # the value was not an integer thus not incremented.
+          raise InvalidValueError
+        elsif sql.affected_rows == 1
+          # If the number of affected_rows is 1 then a new value was inserted
+          # thus we can just return the amount given to us since that is the
+          # value at the key
+          amount
+        end
+      }
     end
 
     # del :: String -> nil
