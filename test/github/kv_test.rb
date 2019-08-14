@@ -54,6 +54,14 @@ class GitHub::KVTest < Minitest::Test
     end
   end
 
+  def test_increment_failure
+    ActiveRecord::Base.connection.stubs(:insert).raises(Errno::ECONNRESET)
+
+    assert_raises GitHub::KV::UnavailableError do
+      @kv.increment("foo")
+    end
+  end
+
   def test_increment_default_value
     result = @kv.increment("foo")
 
