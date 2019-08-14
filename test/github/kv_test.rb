@@ -263,9 +263,8 @@ class GitHub::KVTest < Minitest::Test
     expires = Time.at(1.hour.from_now.to_i).utc
     @kv.set("foo-ttl", "bar", expires: expires)
 
-    puts @kv.mttl(["foo-ttl", "bar-ttl"]).value!
-
     assert_equal [expires, nil], @kv.mttl(["foo-ttl", "bar-ttl"]).value!
+    assert_equal [nil, expires], @kv.mttl(["bar-ttl", "foo-ttl"]).value!
   end
 
   def test_type_checks_key
@@ -321,6 +320,10 @@ class GitHub::KVTest < Minitest::Test
         # mset/mget
         @kv.mset({"foo" => "baz"}, expires: 1.day.from_now.utc)
         assert_equal ["baz"], @kv.mget(["foo"]).value!
+
+        # increment
+        @kv.increment("foo-increment", expires: 1.day.from_now.utc)
+        assert_equal 1, @kv.get("foo-increment").value!.to_i
       end
     end
   end

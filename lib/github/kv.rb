@@ -426,7 +426,7 @@ module GitHub
 
       Result.new {
         kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :now => now, :connection => connection).to_h
-          SELECT expires_at FROM key_values
+          SELECT `key`, expires_at FROM key_values
           WHERE `key` in :keys AND (expires_at IS NULL OR expires_at > :now)
         SQL
 
