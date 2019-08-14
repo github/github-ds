@@ -264,10 +264,10 @@ module GitHub
     # expires - When the key should expire.
     #
     # Returns the key's value after incrementing.
-    def increment(key, amount: 1, expires: GitHub::SQL::NULL)
+    def increment(key, amount: 1, expires: nil)
       validate_key(key)
-      validate_amount(amount)
-      validate_expires(expires)
+      validate_amount(amount) if amount
+      validate_expires(expires) if expries
 
       # This query uses a few MySQL "hacks" to ensure that the incrementing
       # is done atomically and the value is returned. The first trick is done
