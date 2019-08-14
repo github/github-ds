@@ -267,7 +267,9 @@ module GitHub
     def increment(key, amount: 1, expires: nil)
       validate_key(key)
       validate_amount(amount) if amount
-      validate_expires(expires) if expries
+      validate_expires(expires) if expires
+
+      expires ||= GitHub::SQL::NULL
 
       # This query uses a few MySQL "hacks" to ensure that the incrementing
       # is done atomically and the value is returned. The first trick is done
@@ -420,10 +422,10 @@ module GitHub
     #    # => #<Result value: [2018-04-23 11:34:54 +0200, nil]>
     #
     def mttl(keys)
-      validate_keys(key)
+      validate_key_array(keys)
 
       Result.new {
-        kvs = GitHub::SQL.value(<<-SQL, :keys => keys, :now => now, :connection => connection).to_h
+        kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :now => now, :connection => connection).to_h
           SELECT expires_at FROM key_values
           WHERE `key` in :keys AND (expires_at IS NULL OR expires_at > :now)
         SQL

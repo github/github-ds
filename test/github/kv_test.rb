@@ -255,6 +255,19 @@ class GitHub::KVTest < Minitest::Test
     assert_nil @kv.ttl("foo-ttl").value!
   end
 
+  def test_mttl
+    assert_equal [nil, nil], @kv.mttl(["foo-ttl", "bar-ttl"]).value!
+
+    # the Time.at dance is necessary because MySQL does not support sub-second
+    # precision in DATETIME values
+    expires = Time.at(1.hour.from_now.to_i).utc
+    @kv.set("foo-ttl", "bar", expires: expires)
+
+    puts @kv.mttl(["foo-ttl", "bar-ttl"]).value!
+
+    assert_equal [expires, nil], @kv.mttl(["foo-ttl", "bar-ttl"]).value!
+  end
+
   def test_type_checks_key
     assert_raises TypeError do
       @kv.get(0)
