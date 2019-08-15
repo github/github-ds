@@ -117,19 +117,19 @@ class GitHub::KVTest < Minitest::Test
   end
 
   def test_increment_sets_expires
-    expires = 2.hours.from_now.utc
-
-    @kv.set("foo", "100", expires: 1.hour.from_now)
+    expires = 1.hour.from_now.utc
     @kv.increment("foo", expires: expires)
 
     assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
   end
 
   def test_increment_updates_expires
-    @kv.set("foo", "100", expires: 1.hour.ago)
-    result = @kv.increment("foo")
+    expires = 2.hours.from_now.utc
 
-    assert_equal 1, result
+    @kv.set("foo", "100", expires: 1.hour.from_now)
+    @kv.increment("foo", expires: expires)
+
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
   end
 
   def test_increment_non_integer_key_value
