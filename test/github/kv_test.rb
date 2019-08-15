@@ -154,6 +154,16 @@ class GitHub::KVTest < Minitest::Test
     assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
   end
 
+  def test_increment_sets_expires_only_on_insert_for_existing
+    expires = 1.hour.from_now.utc
+    @kv.set("foo", "100", expires: expires)
+
+    result = @kv.increment("foo", expires: 3.hours.from_now.utc, touch_on_insert: true)
+    assert_equal 101, result
+
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+  end
+
   def test_increment_updates_expires
     expires = 2.hours.from_now.utc
 
