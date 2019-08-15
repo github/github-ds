@@ -257,17 +257,22 @@ module GitHub
     #
     # Increment the key's value by an amount.
     #
-    # key     - The key to increment.
-    # amount  - The amount to increment the key's value by.
-    #           The user can increment by both positive and
-    #           negative values
-    # expires - When the key should expire.
+    # key             - The key to increment.
+    # amount          - The amount to increment the key's value by.
+    #                   The user can increment by both positive and
+    #                   negative values
+    # expires         - When the key should expire.
+    # touch_on_insert - Only when expires is specified. When true
+    #                   the expires value is only touched upon
+    #                   inserts. Otherwise the record is always
+    #                   touched.
     #
     # Returns the key's value after incrementing.
-    def increment(key, amount: 1, expires: nil)
+    def increment(key, amount: 1, expires: nil, touch_on_insert: false)
       validate_key(key)
       validate_amount(amount) if amount
       validate_expires(expires) if expires
+      validate_touch(touch_on_insert, expires)
 
       expires ||= GitHub::SQL::NULL
 
@@ -287,7 +292,7 @@ module GitHub
       # If the value is not an integer the update ensures the values remain the
       # same and we raise an error.
       encapsulate_error {
-        sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires, connection: connection)
+        sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires, touch: !touch_on_insert, connection: connection)
           INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
           VALUES(:key, :amount, :now, :now, :expires)
           ON DUPLICATE KEY UPDATE
@@ -307,7 +312,11 @@ module GitHub
             ),
             `expires_at`=IF(
               concat('',`value`*1) = `value`,
-              :expires,
+              IF(
+                :touch,
+                :expires,
+                `expires_at`
+              ),
               `expires_at`
             )
         SQL
@@ -495,6 +504,14 @@ module GitHub
     def validate_amount(amount)
       raise ArgumentError.new("The amount specified must be an integer") unless amount.is_a? Integer
       raise ArgumentError.new("The amount specified cannot be 0") if amount == 0
+    end
+
+    def validate_touch(touch, expires)
+      raise ArgumentError.new("touch_on_insert must be a boolean value") unless !!touch == touch
+
+      if touch && expires.nil?
+        raise ArgumentError.new("Please specify an expires value if you wish to touch on insert")
+      end
     end
 
     def validate_expires(expires)

@@ -66,6 +66,7 @@ class GitHub::KVTest < Minitest::Test
     result = @kv.increment("foo")
 
     assert_equal 1, result
+    assert_nil @kv.ttl("foo").value!
   end
 
   def test_increment_large_value
@@ -111,9 +112,28 @@ class GitHub::KVTest < Minitest::Test
 
   def test_increment_overwrites_expired_value
     @kv.set("foo", "100", expires: 1.hour.ago)
+    expires = 1.hour.from_now.utc
+    result = @kv.increment("foo", expires: expires)
+
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+    assert_equal 1, result
+  end
+
+  def test_increment_overwrites_expired_value_from_incrementing
+    @kv.increment("foo", expires: 1.hour.ago)
+    expires = 1.hour.from_now.utc
+    result = @kv.increment("foo", expires: expires)
+
+    assert_equal 1, result
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+  end
+
+  def test_increment_overwrites_expired_with_nil
+    @kv.increment("foo", expires: 1.hour.ago)
     result = @kv.increment("foo")
 
     assert_equal 1, result
+    assert_nil @kv.ttl("foo").value!
   end
 
   def test_increment_sets_expires
@@ -123,12 +143,24 @@ class GitHub::KVTest < Minitest::Test
     assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
   end
 
+  def test_increment_sets_expires_only_on_insert
+    expires = 1.hour.from_now.utc
+    result = @kv.increment("foo", expires: expires, touch_on_insert: true)
+    assert_equal 1, result
+
+    result = @kv.increment("foo", expires: 3.hours.from_now.utc, touch_on_insert: true)
+    assert_equal 2, result
+
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+  end
+
   def test_increment_updates_expires
     expires = 2.hours.from_now.utc
 
     @kv.set("foo", "100", expires: 1.hour.from_now)
-    @kv.increment("foo", expires: expires)
+    result = @kv.increment("foo", expires: expires)
 
+    assert_equal 101, result
     assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
   end
 
@@ -150,6 +182,18 @@ class GitHub::KVTest < Minitest::Test
   def test_increment_only_accepts_integer_amounts
     assert_raises ArgumentError do
       @kv.increment("foo", amount: 0)
+    end
+  end
+
+  def test_increment_with_touch_expects_expires
+    assert_raises ArgumentError do
+      @kv.increment("foo", touch_on_insert: true)
+    end
+  end
+
+  def test_increment_with_touch_must_be_boolean
+    assert_raises ArgumentError do
+      @kv.increment("foo", touch_on_insert: "blahblah")
     end
   end
 
