@@ -341,7 +341,7 @@ module GitHub
           # the last insert ID to be the new value.
           sql.last_insert_id
         elsif sql.affected_rows == 0 || (found_rows_is_set && sql.affected_rows == 1 && sql.last_insert_id == 0)
-          # No inert took place nor did any update occur. This means that
+          # No insert took place nor did any update occur. This means that
           # the value was not an integer thus not incremented.
           raise InvalidValueError
         elsif sql.affected_rows == 1
