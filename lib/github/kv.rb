@@ -321,22 +321,6 @@ module GitHub
             )
         SQL
 
-        # Check if MySQL connection parameter CLIENT_FOUND_ROWS is set. If it is
-        # to check for invalid values we must use a workaround via the last_insert_id
-        # From the MySQL docs:
-        #
-        # If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API
-        # function when connecting to mysqld, the affected-rows value is 1 (not 0)
-        # if an existing row is set to its current values.
-        # https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
-        flags = connection.raw_connection.query_options[:flags]
-
-        # The flag is Mysql2::Client::FOUND_ROWS however older versions of the Mysql2
-        # library don't explicitly define the FOUND_ROWS const. The value of the const
-        # is 1<<1 (2)
-        check = 1 << 1
-        found_rows_is_set = flags & check == check
-
         # The ordering of these statements is extremely important if we are to
         # support incrementing a negative amount. The checks occur in this order:
         # 1. Check if an update with new values occured? If so return the result
@@ -349,7 +333,7 @@ module GitHub
           # An update took place in which data changed. We use a hack to set
           # the last insert ID to be the new value.
           sql.last_insert_id
-        elsif sql.affected_rows == 0 || (found_rows_is_set && sql.affected_rows == 1 && sql.last_insert_id == 0)
+        elsif sql.affected_rows == 0 || (found_rows_is_set? && sql.affected_rows == 1 && sql.last_insert_id == 0)
           # No insert took place nor did any update occur. This means that
           # the value was not an integer thus not incremented.
           raise InvalidValueError
@@ -507,7 +491,7 @@ module GitHub
     end
 
     def validate_touch(touch, expires)
-      raise ArgumentError.new("touch_on_insert must be a boolean value") unless !!touch == touch
+      raise ArgumentError.new("touch_on_insert must be a boolean value") unless [true, false].include?(touch)
 
       if touch && expires.nil?
         raise ArgumentError.new("Please specify an expires value if you wish to touch on insert")
@@ -518,6 +502,24 @@ module GitHub
       unless expires.respond_to?(:to_time)
         raise TypeError, "expires must be a time of some sort (Time, DateTime, ActiveSupport::TimeWithZone, etc.), but was #{expires.class}"
       end
+    end
+
+    def found_rows_is_set?
+        # Check if MySQL connection parameter CLIENT_FOUND_ROWS is set. If it is
+        # to check for invalid values we must use a workaround via the last_insert_id
+        # From the MySQL docs:
+        #
+        # If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API
+        # function when connecting to mysqld, the affected-rows value is 1 (not 0)
+        # if an existing row is set to its current values.
+        # https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+        flags = connection.raw_connection.query_options[:flags]
+
+        # The flag is Mysql2::Client::FOUND_ROWS however older versions of the Mysql2
+        # library don't explicitly define the FOUND_ROWS const. The value of the const
+        # is 1<<1 (2)
+        check = 1 << 1
+        flags & check == check
     end
 
     def encapsulate_error
