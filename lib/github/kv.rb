@@ -429,7 +429,7 @@ module GitHub
           WHERE `key` in :keys AND (expires_at IS NULL OR expires_at > :now)
         SQL
 
-        keys.map{ |key| kvs[key] }
+        keys.map { |key| kvs[key] }
       }
     end
 
