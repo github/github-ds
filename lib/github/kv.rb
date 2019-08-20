@@ -44,6 +44,7 @@ module GitHub
   class KV
     MAX_KEY_LENGTH = 255
     MAX_VALUE_LENGTH = 65535
+    CLIENT_FOUND_ROWS = 1 << 1
 
     KeyLengthError = Class.new(StandardError)
     ValueLengthError = Class.new(StandardError)
@@ -51,6 +52,7 @@ module GitHub
     InvalidValueError = Class.new(StandardError)
 
     class MissingConnectionError < StandardError; end
+    class InvalidConnectionError < StandardError; end
 
     attr_accessor :use_local_time
 
@@ -71,6 +73,7 @@ module GitHub
       @encapsulated_errors = encapsulated_errors
       @use_local_time = use_local_time
       @conn_block = conn_block
+      raise InvalidConnectionError, "CLIENT_FOUND_ROWS must not be set" unless found_rows_is_set?(connection)
     end
 
     def connection
@@ -323,17 +326,20 @@ module GitHub
 
         # The ordering of these statements is extremely important if we are to
         # support incrementing a negative amount. The checks occur in this order:
-        # 1. Check if an update with new values occured? If so return the result
+        # 1. Check if an update with new values occurred? If so return the result
         #    This could potentially result in `sql.last_insert_id` with a value
         #    of 0, thus it must be before the second check.
         # 2. Check if an update took place but nothing changed (I.E. no new value
         #    was set)
         # 3. Check if an insert took place.
+        #
+        # See https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html for
+        # more information (NOTE: CLIENT_FOUND_ROWS is set)
         if sql.affected_rows == 2
           # An update took place in which data changed. We use a hack to set
           # the last insert ID to be the new value.
           sql.last_insert_id
-        elsif sql.affected_rows == 0 || (found_rows_is_set? && sql.affected_rows == 1 && sql.last_insert_id == 0)
+        elsif sql.affected_rows == 1 && sql.last_insert_id == 0
           # No insert took place nor did any update occur. This means that
           # the value was not an integer thus not incremented.
           raise InvalidValueError
@@ -504,7 +510,7 @@ module GitHub
       end
     end
 
-    def found_rows_is_set?
+    def found_rows_is_set?(connection)
         # Check if MySQL connection parameter CLIENT_FOUND_ROWS is set. If it is
         # to check for invalid values we must use a workaround via the last_insert_id
         # From the MySQL docs:
@@ -518,8 +524,7 @@ module GitHub
         # The flag is Mysql2::Client::FOUND_ROWS however older versions of the Mysql2
         # library don't explicitly define the FOUND_ROWS const. The value of the const
         # is 1<<1 (2)
-        check = 1 << 1
-        flags & check == check
+        flags & CLIENT_FOUND_ROWS == CLIENT_FOUND_ROWS
     end
 
     def encapsulate_error
