@@ -73,7 +73,7 @@ module GitHub
       @encapsulated_errors = encapsulated_errors
       @use_local_time = use_local_time
       @conn_block = conn_block
-      raise InvalidConnectionError, "CLIENT_FOUND_ROWS must not be set" unless found_rows_is_set?(connection)
+      raise InvalidConnectionError, "CLIENT_FOUND_ROWS must be set" unless found_rows_is_set?(connection)
     end
 
     def connection
