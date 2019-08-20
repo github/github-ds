@@ -7,18 +7,10 @@ class GitHub::KVTest < Minitest::Test
   end
 
   def test_initialize_without_connection
+    kv = GitHub::KV.new
     assert_raises GitHub::KV::MissingConnectionError do
-      GitHub::KV.new
+      kv.get("foo").value!
     end
-  end
-
-  def test_initialize_with_client_found_rows_set
-    old = ActiveRecord::Base.connection.raw_connection.query_options[:flags]
-    ActiveRecord::Base.connection.raw_connection.query_options[:flags] = 0
-    assert_raises GitHub::KV::InvalidConnectionError do
-      GitHub::KV.new{ ActiveRecord::Base.connection }
-    end
-    ActiveRecord::Base.connection.raw_connection.query_options[:flags] = old
   end
 
   def test_get_and_set

@@ -44,7 +44,6 @@ module GitHub
   class KV
     MAX_KEY_LENGTH = 255
     MAX_VALUE_LENGTH = 65535
-    CLIENT_FOUND_ROWS = 1 << 1
 
     KeyLengthError = Class.new(StandardError)
     ValueLengthError = Class.new(StandardError)
@@ -52,7 +51,6 @@ module GitHub
     InvalidValueError = Class.new(StandardError)
 
     class MissingConnectionError < StandardError; end
-    class InvalidConnectionError < StandardError; end
 
     attr_accessor :use_local_time
 
@@ -73,7 +71,6 @@ module GitHub
       @encapsulated_errors = encapsulated_errors
       @use_local_time = use_local_time
       @conn_block = conn_block
-      raise InvalidConnectionError, "CLIENT_FOUND_ROWS must be set" unless found_rows_is_set?(connection)
     end
 
     def connection
@@ -339,7 +336,7 @@ module GitHub
           # An update took place in which data changed. We use a hack to set
           # the last insert ID to be the new value.
           sql.last_insert_id
-        elsif sql.affected_rows == 1 && sql.last_insert_id == 0
+        elsif sql.affected_rows == 0 || (sql.affected_rows == 1 && sql.last_insert_id == 0)
           # No insert took place nor did any update occur. This means that
           # the value was not an integer thus not incremented.
           raise InvalidValueError
@@ -508,23 +505,6 @@ module GitHub
       unless expires.respond_to?(:to_time)
         raise TypeError, "expires must be a time of some sort (Time, DateTime, ActiveSupport::TimeWithZone, etc.), but was #{expires.class}"
       end
-    end
-
-    def found_rows_is_set?(connection)
-        # Check if MySQL connection parameter CLIENT_FOUND_ROWS is set. If it is
-        # to check for invalid values we must use a workaround via the last_insert_id
-        # From the MySQL docs:
-        #
-        # If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API
-        # function when connecting to mysqld, the affected-rows value is 1 (not 0)
-        # if an existing row is set to its current values.
-        # https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
-        flags = connection.raw_connection.query_options[:flags]
-
-        # The flag is Mysql2::Client::FOUND_ROWS however older versions of the Mysql2
-        # library don't explicitly define the FOUND_ROWS const. The value of the const
-        # is 1<<1 (2)
-        flags & CLIENT_FOUND_ROWS == CLIENT_FOUND_ROWS
     end
 
     def encapsulate_error
