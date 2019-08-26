@@ -13,3 +13,5 @@ env:
   - RAILS_VERSION=5.1.5
   - RAILS_VERSION=5.0.6
   - RAILS_VERSION=4.2.10
+services:
+  - mysql

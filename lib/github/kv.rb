@@ -48,6 +48,7 @@ module GitHub
     KeyLengthError = Class.new(StandardError)
     ValueLengthError = Class.new(StandardError)
     UnavailableError = Class.new(StandardError)
+    InvalidValueError = Class.new(StandardError)
 
     class MissingConnectionError < StandardError; end
 
@@ -252,6 +253,102 @@ module GitHub
       }
     end
 
+    # increment :: String, Integer, expires: Time? -> Integer
+    #
+    # Increment the key's value by an amount.
+    #
+    # key             - The key to increment.
+    # amount          - The amount to increment the key's value by.
+    #                   The user can increment by both positive and
+    #                   negative values
+    # expires         - When the key should expire.
+    # touch_on_insert - Only when expires is specified. When true
+    #                   the expires value is only touched upon
+    #                   inserts. Otherwise the record is always
+    #                   touched.
+    #
+    # Returns the key's value after incrementing.
+    def increment(key, amount: 1, expires: nil, touch_on_insert: false)
+      validate_key(key)
+      validate_amount(amount) if amount
+      validate_expires(expires) if expires
+      validate_touch(touch_on_insert, expires)
+
+      expires ||= GitHub::SQL::NULL
+
+      # This query uses a few MySQL "hacks" to ensure that the incrementing
+      # is done atomically and the value is returned. The first trick is done
+      # using the `LAST_INSERT_ID` function. This allows us to manually set
+      # the LAST_INSERT_ID returned by the query. Here we are able to set it
+      # to the new value when an increment takes place, essentially allowing us
+      # to do: `UPDATE...;SELECT value from key_value where key=:key` in a
+      # single step.
+      #
+      # However the `LAST_INSERT_ID` trick is only used when the value is
+      # updated. Upon a fresh insert we know the amount is going to be set
+      # to the amount specified.
+      #
+      # Lastly we only do these tricks when the value at the key is an integer.
+      # If the value is not an integer the update ensures the values remain the
+      # same and we raise an error.
+      encapsulate_error {
+        sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires, touch: !touch_on_insert, connection: connection)
+          INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
+          VALUES(:key, :amount, :now, :now, :expires)
+          ON DUPLICATE KEY UPDATE
+            `value`=IF(
+              concat('',`value`*1) = `value`,
+              LAST_INSERT_ID(IF(
+                `expires_at` IS NULL OR `expires_at`>=:now,
+                `value`+:amount,
+                :amount
+              )),
+              `value`
+            ),
+            `updated_at`=IF(
+              concat('',`value`*1) = `value`,
+              :now,
+              `updated_at`
+            ),
+            `expires_at`=IF(
+              concat('',`value`*1) = `value`,
+              IF(
+                :touch,
+                :expires,
+                `expires_at`
+              ),
+              `expires_at`
+            )
+        SQL
+
+        # The ordering of these statements is extremely important if we are to
+        # support incrementing a negative amount. The checks occur in this order:
+        # 1. Check if an update with new values occurred? If so return the result
+        #    This could potentially result in `sql.last_insert_id` with a value
+        #    of 0, thus it must be before the second check.
+        # 2. Check if an update took place but nothing changed (I.E. no new value
+        #    was set)
+        # 3. Check if an insert took place.
+        #
+        # See https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html for
+        # more information (NOTE: CLIENT_FOUND_ROWS is set)
+        if sql.affected_rows == 2
+          # An update took place in which data changed. We use a hack to set
+          # the last insert ID to be the new value.
+          sql.last_insert_id
+        elsif sql.affected_rows == 0 || (sql.affected_rows == 1 && sql.last_insert_id == 0)
+          # No insert took place nor did any update occur. This means that
+          # the value was not an integer thus not incremented.
+          raise InvalidValueError
+        elsif sql.affected_rows == 1
+          # If the number of affected_rows is 1 then a new value was inserted
+          # thus we can just return the amount given to us since that is the
+          # value at the key
+          amount
+        end
+      }
+    end
+
     # del :: String -> nil
     #
     # Deletes the specified key. Returns nil. Raises on error.
@@ -311,6 +408,28 @@ module GitHub
       }
     end
 
+    # mttl :: [String] -> Result<[Time | nil]>
+    #
+    # Returns the expires_at time for the specified key or nil.
+    #
+    # Example:
+    #
+    #  kv.mttl(["foo", "octocat"])
+    #    # => #<Result value: [2018-04-23 11:34:54 +0200, nil]>
+    #
+    def mttl(keys)
+      validate_key_array(keys)
+
+      Result.new {
+        kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :now => now, :connection => connection).to_h
+          SELECT `key`, expires_at FROM key_values
+          WHERE `key` in :keys AND (expires_at IS NULL OR expires_at > :now)
+        SQL
+
+        keys.map { |key| kvs[key] }
+      }
+    end
+
   private
     def now
       use_local_time ? Time.now : GitHub::SQL::NOW
@@ -366,6 +485,19 @@ module GitHub
     def validate_value_length(value)
       if value.bytesize > MAX_VALUE_LENGTH
         raise ValueLengthError, "value of length #{value.length} exceeds maximum value length of #{MAX_VALUE_LENGTH}"
+      end
+    end
+
+    def validate_amount(amount)
+      raise ArgumentError.new("The amount specified must be an integer") unless amount.is_a? Integer
+      raise ArgumentError.new("The amount specified cannot be 0") if amount == 0
+    end
+
+    def validate_touch(touch, expires)
+      raise ArgumentError.new("touch_on_insert must be a boolean value") unless [true, false].include?(touch)
+
+      if touch && expires.nil?
+        raise ArgumentError.new("Please specify an expires value if you wish to touch on insert")
       end
     end
 

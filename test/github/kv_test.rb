@@ -54,6 +54,159 @@ class GitHub::KVTest < Minitest::Test
     end
   end
 
+  def test_increment_failure
+    ActiveRecord::Base.connection.stubs(:insert).raises(Errno::ECONNRESET)
+
+    assert_raises GitHub::KV::UnavailableError do
+      @kv.increment("foo")
+    end
+  end
+
+  def test_increment_default_value
+    result = @kv.increment("foo")
+
+    assert_equal 1, result
+    assert_nil @kv.ttl("foo").value!
+  end
+
+  def test_increment_large_value
+    result = @kv.increment("foo", amount: 10000)
+
+    assert_equal 10000, result
+  end
+
+  def test_increment_negative
+    result = @kv.increment("foo", amount: -1)
+
+    assert_equal -1, result
+  end
+
+  def test_increment_negative_to_0
+    @kv.set("foo", "1")
+    result = @kv.increment("foo", amount: -1)
+
+    assert_equal 0, result
+  end
+
+  def test_increment_multiple
+    @kv.increment("foo")
+    result = @kv.increment("foo")
+
+    assert_equal 2, result
+  end
+
+  def test_increment_multiple_different_values
+    @kv.increment("foo")
+    result = @kv.increment("foo", amount: 2)
+
+    assert_equal 3, result
+  end
+
+  def test_increment_existing
+    @kv.set("foo", "1")
+
+    result = @kv.increment("foo")
+
+    assert_equal 2, result
+  end
+
+  def test_increment_overwrites_expired_value
+    @kv.set("foo", "100", expires: 1.hour.ago)
+    expires = 1.hour.from_now.utc
+    result = @kv.increment("foo", expires: expires)
+
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+    assert_equal 1, result
+  end
+
+  def test_increment_overwrites_expired_value_from_incrementing
+    @kv.increment("foo", expires: 1.hour.ago)
+    expires = 1.hour.from_now.utc
+    result = @kv.increment("foo", expires: expires)
+
+    assert_equal 1, result
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+  end
+
+  def test_increment_overwrites_expired_with_nil
+    @kv.increment("foo", expires: 1.hour.ago)
+    result = @kv.increment("foo")
+
+    assert_equal 1, result
+    assert_nil @kv.ttl("foo").value!
+  end
+
+  def test_increment_sets_expires
+    expires = 1.hour.from_now.utc
+    @kv.increment("foo", expires: expires)
+
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+  end
+
+  def test_increment_sets_expires_only_on_insert
+    expires = 1.hour.from_now.utc
+    result = @kv.increment("foo", expires: expires, touch_on_insert: true)
+    assert_equal 1, result
+
+    result = @kv.increment("foo", expires: 3.hours.from_now.utc, touch_on_insert: true)
+    assert_equal 2, result
+
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+  end
+
+  def test_increment_sets_expires_only_on_insert_for_existing
+    expires = 1.hour.from_now.utc
+    @kv.set("foo", "100", expires: expires)
+
+    result = @kv.increment("foo", expires: 3.hours.from_now.utc, touch_on_insert: true)
+    assert_equal 101, result
+
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+  end
+
+  def test_increment_updates_expires
+    expires = 2.hours.from_now.utc
+
+    @kv.set("foo", "100", expires: 1.hour.from_now)
+    result = @kv.increment("foo", expires: expires)
+
+    assert_equal 101, result
+    assert_equal expires.to_i, @kv.ttl("foo").value!.to_i
+  end
+
+  def test_increment_non_integer_key_value
+    @kv.set("foo", "bar")
+
+    assert_raises GitHub::KV::InvalidValueError do
+      @kv.increment("foo")
+    end
+    assert_equal "bar", @kv.get("foo").value!
+  end
+
+  def test_increment_only_accepts_integer_amounts
+    assert_raises ArgumentError do
+      @kv.increment("foo", amount: "bar")
+    end
+  end
+
+  def test_increment_only_accepts_integer_amounts
+    assert_raises ArgumentError do
+      @kv.increment("foo", amount: 0)
+    end
+  end
+
+  def test_increment_with_touch_expects_expires
+    assert_raises ArgumentError do
+      @kv.increment("foo", touch_on_insert: true)
+    end
+  end
+
+  def test_increment_with_touch_must_be_boolean
+    assert_raises ArgumentError do
+      @kv.increment("foo", touch_on_insert: "blahblah")
+    end
+  end
+
   def test_exists
     assert_equal false, @kv.exists("foo").value!
 
@@ -187,6 +340,18 @@ class GitHub::KVTest < Minitest::Test
     assert_nil @kv.ttl("foo-ttl").value!
   end
 
+  def test_mttl
+    assert_equal [nil, nil], @kv.mttl(["foo-ttl", "bar-ttl"]).value!
+
+    # the Time.at dance is necessary because MySQL does not support sub-second
+    # precision in DATETIME values
+    expires = Time.at(1.hour.from_now.to_i).utc
+    @kv.set("foo-ttl", "bar", expires: expires)
+
+    assert_equal [expires, nil], @kv.mttl(["foo-ttl", "bar-ttl"]).value!
+    assert_equal [nil, expires], @kv.mttl(["bar-ttl", "foo-ttl"]).value!
+  end
+
   def test_type_checks_key
     assert_raises TypeError do
       @kv.get(0)
@@ -240,6 +405,10 @@ class GitHub::KVTest < Minitest::Test
         # mset/mget
         @kv.mset({"foo" => "baz"}, expires: 1.day.from_now.utc)
         assert_equal ["baz"], @kv.mget(["foo"]).value!
+
+        # increment
+        @kv.increment("foo-increment", expires: 1.day.from_now.utc)
+        assert_equal 1, @kv.get("foo-increment").value!.to_i
       end
     end
   end

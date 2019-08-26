@@ -8,6 +8,8 @@ require "github/kv"
 require "timecop"
 require "minitest/autorun"
 require "mocha/mini_test"
+require "minitest/focus"
+require "pry"
 
 ActiveRecord::Base.configurations = {
   "without_database" => {
