@@ -288,7 +288,7 @@ module GitHub
       # updated. Upon a fresh insert we know the amount is going to be set
       # to the amount specified.
       #
-      # Lastly we only do these tricks when the value at the key is and integer.
+      # Lastly we only do these tricks when the value at the key is an integer.
       # If the value is not an integer the update ensures the values remain the
       # same and we raise an error.
       encapsulate_error {
