@@ -4,6 +4,7 @@ class GitHub::KVTest < Minitest::Test
   def setup
     ActiveRecord::Base.connection.execute("TRUNCATE `key_values`")
     @kv = GitHub::KV.new { ActiveRecord::Base.connection }
+    GitHub::DS.reset
   end
 
   def test_initialize_without_connection
