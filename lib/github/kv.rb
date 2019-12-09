@@ -71,7 +71,7 @@ module GitHub
       @encapsulated_errors = encapsulated_errors
       @use_local_time = use_local_time
       @conn_block = conn_block
-      @table_name = GitHub::SQL::LITERAL(GitHub::DS.config.table_name).value
+      @table_name = GitHub::DS.config.table_name
     end
 
     def connection
