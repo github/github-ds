@@ -5,6 +5,10 @@ class GitHub::DSTest < Minitest::Test
     GitHub::DS.reset
   end
 
+  def teardown
+    GitHub::DS.reset
+  end
+
   def test_configures_correctly
     GitHub::DS.configure do |config|
       config.table_name = "example_key_values"
