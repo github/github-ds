@@ -25,6 +25,8 @@ ActiveRecord::Base.configurations = {
   },
 }
 
+GitHub::DS.reset
+
 attempts = 0
 begin
   ActiveRecord::Base.establish_connection :with_database
