@@ -67,11 +67,11 @@ module GitHub
     # &conn_block         - A block to call to open a new database connection.
     #
     # Returns nothing.
-    def initialize(encapsulated_errors = [SystemCallError], use_local_time: false, &conn_block)
-      @encapsulated_errors = encapsulated_errors
-      @use_local_time = use_local_time
+    def initialize(config: GitHub::DS.config, &conn_block)
+      @encapsulated_errors = config.encapsulated_errors
+      @use_local_time = config.use_local_time
+      @table_name = config.table_name
       @conn_block = conn_block
-      @table_name = GitHub::DS.config.table_name
     end
 
     def connection
