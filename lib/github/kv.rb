@@ -1,3 +1,4 @@
+require_relative "kv/config"
 require_relative "result"
 require_relative "sql"
 
@@ -53,6 +54,19 @@ module GitHub
     class MissingConnectionError < StandardError; end
 
     attr_accessor :use_local_time
+    attr_writer :config
+
+    def self.config
+      @config ||= Config.new
+    end
+
+    def self.reset
+      @config = Config.new
+    end
+
+    def self.configure
+      yield(config)
+    end
 
     # initialize :: [Exception], Boolean, Proc -> nil
     #
@@ -67,7 +81,7 @@ module GitHub
     # &conn_block         - A block to call to open a new database connection.
     #
     # Returns nothing.
-    def initialize(config: GitHub::DS.config, &conn_block)
+    def initialize(config: GitHub::KV.config, &conn_block)
       @encapsulated_errors = config.encapsulated_errors
       @use_local_time = config.use_local_time
       @table_name = config.table_name

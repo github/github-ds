@@ -28,7 +28,7 @@ module Github
         end
 
         def self.table_name
-          ":#{GitHub::DS.config.table_name}"
+          ":#{GitHub::KV.config.table_name}"
         end
 
         def table_name

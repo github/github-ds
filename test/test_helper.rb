@@ -25,7 +25,7 @@ ActiveRecord::Base.configurations = {
   },
 }
 
-GitHub::DS.reset
+GitHub::KV.reset
 
 attempts = 0
 begin

@@ -4,7 +4,29 @@ class GitHub::KVTest < Minitest::Test
   def setup
     ActiveRecord::Base.connection.execute("TRUNCATE `key_values`")
     @kv = GitHub::KV.new { ActiveRecord::Base.connection }
-    GitHub::DS.reset
+    GitHub::KV.reset
+  end
+
+  def teardown
+    GitHub::KV.reset
+  end
+
+  def test_config_configures_correctly
+    GitHub::KV.configure do |config|
+      config.table_name = "example_key_values"
+    end
+
+    assert_equal GitHub::KV.config.table_name, "example_key_values"
+  end
+
+  def test_config_resets_correctly
+    GitHub::KV.configure do |config|
+      config.table_name = "example_key_values"
+    end
+
+    GitHub::KV.reset
+    refute_equal GitHub::KV.config.table_name, "example_key_values"
+    assert_equal GitHub::KV.config.table_name, "key_values"
   end
 
   def test_initialize_without_connection

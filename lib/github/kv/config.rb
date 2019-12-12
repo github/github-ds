@@ -1,5 +1,5 @@
 module GitHub
-  module DS
+  class KV
     class Config
       attr_accessor :table_name, :encapsulated_errors, :use_local_time
 
