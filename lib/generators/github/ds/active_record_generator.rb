@@ -26,6 +26,14 @@ module Github
         def migration_version
           self.class.migration_version
         end
+
+        def self.table_name
+          ":#{GitHub::KV.config.table_name}"
+        end
+
+        def table_name
+          self.class.table_name
+        end
       end
     end
   end

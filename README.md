@@ -37,6 +37,14 @@ rails generate github:ds:active_record
 rails db:migrate
 ```
 
+If you need to change the name of the table used for storing the key-values, you can configure your table name as such, before running the migration:
+
+```
+GitHub::KV.configure do |config|
+  config.table_name = "new_key_values_table"
+end
+```
+
 Once you have created and executed the migration, KV can do neat things like this:
 
 ```ruby

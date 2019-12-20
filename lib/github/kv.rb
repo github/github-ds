@@ -1,3 +1,4 @@
+require_relative "kv/config"
 require_relative "result"
 require_relative "sql"
 
@@ -53,6 +54,19 @@ module GitHub
     class MissingConnectionError < StandardError; end
 
     attr_accessor :use_local_time
+    attr_writer :config
+
+    def self.config
+      @config ||= Config.new
+    end
+
+    def self.reset
+      @config = Config.new
+    end
+
+    def self.configure
+      yield(config)
+    end
 
     # initialize :: [Exception], Boolean, Proc -> nil
     #
@@ -67,9 +81,10 @@ module GitHub
     # &conn_block         - A block to call to open a new database connection.
     #
     # Returns nothing.
-    def initialize(encapsulated_errors = [SystemCallError], use_local_time: false, &conn_block)
-      @encapsulated_errors = encapsulated_errors
-      @use_local_time = use_local_time
+    def initialize(config: GitHub::KV.config, &conn_block)
+      @encapsulated_errors = config.encapsulated_errors
+      @use_local_time = config.use_local_time
+      @table_name = config.table_name
       @conn_block = conn_block
     end
 
@@ -111,7 +126,7 @@ module GitHub
 
       Result.new {
         kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :now => now, :connection => connection).to_h
-          SELECT `key`, value FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
+          SELECT `key`, value FROM #{@table_name} WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
 
         keys.map { |key| kvs[key] }
@@ -159,7 +174,7 @@ module GitHub
 
       encapsulate_error do
         GitHub::SQL.run(<<-SQL, :rows => GitHub::SQL::ROWS(rows), :connection => connection)
-          INSERT INTO key_values (`key`, value, created_at, updated_at, expires_at)
+          INSERT INTO #{@table_name} (`key`, value, created_at, updated_at, expires_at)
           VALUES :rows
           ON DUPLICATE KEY UPDATE
             value = VALUES(value),
@@ -204,7 +219,7 @@ module GitHub
 
       Result.new {
         existing_keys = GitHub::SQL.values(<<-SQL, :keys => keys, :now => now, :connection => connection).to_set
-          SELECT `key` FROM key_values WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
+          SELECT `key` FROM #{@table_name} WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
 
         keys.map { |key| existing_keys.include?(key) }
@@ -240,12 +255,12 @@ module GitHub
         # query, but then we would not be able to rely on affected_rows
 
         GitHub::SQL.run(<<-SQL, :key => key, :now => now, :connection => connection)
-          DELETE FROM key_values WHERE `key` = :key AND expires_at <= :now
+          DELETE FROM #{@table_name} WHERE `key` = :key AND expires_at <= :now
         SQL
 
         value = value.is_a?(GitHub::SQL::Literal) ? value : GitHub::SQL::BINARY(value)
         sql = GitHub::SQL.run(<<-SQL, :key => key, :value => value, :now => now, :expires => expires || GitHub::SQL::NULL, :connection => connection)
-          INSERT IGNORE INTO key_values (`key`, value, created_at, updated_at, expires_at)
+          INSERT IGNORE INTO #{@table_name} (`key`, value, created_at, updated_at, expires_at)
           VALUES (:key, :value, :now, :now, :expires)
         SQL
 
@@ -293,7 +308,7 @@ module GitHub
       # same and we raise an error.
       encapsulate_error {
         sql = GitHub::SQL.run(<<-SQL, key: key, amount: amount, now: now, expires: expires, touch: !touch_on_insert, connection: connection)
-          INSERT INTO key_values (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
+          INSERT INTO #{@table_name} (`key`, `value`, `created_at`, `updated_at`, `expires_at`)
           VALUES(:key, :amount, :now, :now, :expires)
           ON DUPLICATE KEY UPDATE
             `value`=IF(
@@ -378,7 +393,7 @@ module GitHub
 
       encapsulate_error do
         GitHub::SQL.run(<<-SQL, :keys => keys, :connection => connection)
-          DELETE FROM key_values WHERE `key` IN :keys
+          DELETE FROM #{@table_name} WHERE `key` IN :keys
         SQL
       end
 
@@ -402,7 +417,7 @@ module GitHub
 
       Result.new {
         GitHub::SQL.value(<<-SQL, :key => key, :now => now, :connection => connection)
-          SELECT expires_at FROM key_values
+          SELECT expires_at FROM #{@table_name}
           WHERE `key` = :key AND (expires_at IS NULL OR expires_at > :now)
         SQL
       }
@@ -422,7 +437,7 @@ module GitHub
 
       Result.new {
         kvs = GitHub::SQL.results(<<-SQL, :keys => keys, :now => now, :connection => connection).to_h
-          SELECT `key`, expires_at FROM key_values
+          SELECT `key`, expires_at FROM #{@table_name}
           WHERE `key` in :keys AND (expires_at IS NULL OR expires_at > :now)
         SQL
 
