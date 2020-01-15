@@ -38,6 +38,7 @@ module GitHub
   #   GitHub::SQL::ROWS(array_of_arrays).
   #
   class SQL
+    COMMENT_REGEX = %r{(?:\s*--.*|/\*(?:[^\*]|\*[^/])*\*/)}m
     # Public: Run inside a transaction. Class version of this method only works
     # if only one connection is in use. If passing connections to
     # GitHub::SQL#initialize or overriding connection then you'll need to use
@@ -242,6 +243,8 @@ module GitHub
           ar_results = connection.select_all(query, "#{self.class.name} Select")
           @hash_results = ar_results.to_ary
           @results = ar_results.rows
+        when /\A(#{COMMENT_REGEX})?\Z/
+          raise Error, "#{query.inspect} has no meaningful contents"
         else
           @results = connection.execute(query, "#{self.class.name} Execute").to_a
         end

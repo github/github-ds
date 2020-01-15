@@ -161,6 +161,42 @@ class GitHub::SQLTest < Minitest::Test
     refute_includes sql.query, "foo"
   end
 
+  def test_block_comment_alone_raise
+    query = "  /* test */"
+    assert_raises GitHub::SQL::Error, "#{query.inspect} has no meaningful contents" do
+      GitHub::SQL.new(query).results
+    end
+  end
+
+  def test_comment_alone_raise
+    query = "  -- test"
+    assert_raises GitHub::SQL::Error, "#{query.inspect} has no meaningful contents" do
+      GitHub::SQL.new(query).results
+    end
+  end
+
+  def test_empty_query_raise
+    query = ""
+    assert_raises GitHub::SQL::Error, "#{query.inspect} has no meaningful contents" do
+      GitHub::SQL.new(query).results
+    end
+  end
+
+  def test_empty_string_query_raise
+    query = "  "
+    assert_raises GitHub::SQL::Error, "#{query.inspect} has no meaningful contents" do
+      GitHub::SQL.new(query).results
+    end
+  end
+
+  def test_queries_with_block_comments_do_not_raise
+    assert_equal [[1]], GitHub::SQL.new("(SELECT(1)) /* hi */").results
+  end
+
+  def test_queries_with_comments_do_not_raise
+    assert_equal [[1]], GitHub::SQL.new("(SELECT(1)) -- hi").results
+  end
+
   def test_class_transaction
     GitHub::SQL.run("CREATE TEMPORARY TABLE affected_rows_test (x INT)")
 
