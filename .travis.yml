@@ -10,8 +10,5 @@ script: bundle exec rake
 env:
   - RAILS_VERSION=6.0.3.1
   - RAILS_VERSION=5.2.0
-  - RAILS_VERSION=5.1.5
-  - RAILS_VERSION=5.0.6
-  - RAILS_VERSION=4.2.10
 services:
   - mysql
