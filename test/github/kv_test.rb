@@ -55,7 +55,7 @@ class GitHub::KVTest < Minitest::Test
   def test_mget_and_mset
     assert_equal [nil, nil], @kv.mget(["a", "b"]).value!
 
-    @kv.mset("a" => "1", "b" => "2")
+    @kv.mset({"a" => "1", "b" => "2"})
 
     assert_equal ["1", "2"], @kv.mget(["a", "b"]).value!
     assert_equal ["2", "1"], @kv.mget(["b", "a"]).value!
@@ -99,9 +99,10 @@ class GitHub::KVTest < Minitest::Test
   end
 
   def test_increment_negative
-    result = @kv.increment("foo", amount: -1)
+    amount = -1
+    result = @kv.increment("foo", amount: amount)
 
-    assert_equal -1, result
+    assert_equal amount, result
   end
 
   def test_increment_negative_to_0
@@ -206,13 +207,13 @@ class GitHub::KVTest < Minitest::Test
     assert_equal "bar", @kv.get("foo").value!
   end
 
-  def test_increment_only_accepts_integer_amounts
+  def test_increment_only_accepts_integer_amounts_strings
     assert_raises ArgumentError do
       @kv.increment("foo", amount: "bar")
     end
   end
 
-  def test_increment_only_accepts_integer_amounts
+  def test_increment_only_accepts_integer_amounts_integer
     assert_raises ArgumentError do
       @kv.increment("foo", amount: 0)
     end

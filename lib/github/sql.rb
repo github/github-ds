@@ -43,7 +43,7 @@ module GitHub
     # GitHub::SQL#initialize or overriding connection then you'll need to use
     # the instance version.
     def self.transaction(options = {}, &block)
-      ActiveRecord::Base.connection.transaction(options, &block)
+      ActiveRecord::Base.connection.transaction(**options, &block)
     end
 
     # Public: Instantiate a literal SQL value.
@@ -299,7 +299,7 @@ module GitHub
 
     # Public: Run inside a transaction for the connection.
     def transaction(options = {}, &block)
-      connection.transaction(options, &block)
+      connection.transaction(**options, &block)
     end
 
     # Internal: The object we use to execute SQL and retrieve results. Defaults
