@@ -18,7 +18,7 @@ module Github
         end
 
         def self.migration_version
-          if Rails.version.start_with?('5')
+          if Rails::VERSION::MAJOR.to_i >= 5
             "[#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}]"
           end
         end
