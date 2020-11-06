@@ -328,7 +328,7 @@ module GitHub
             `expires_at`=IF(
               concat('',`value`*1) = `value`,
               IF(
-                :touch,
+                :touch OR (`expires_at` IS NULL OR `expires_at`<:now),
                 :expires,
                 `expires_at`
               ),
