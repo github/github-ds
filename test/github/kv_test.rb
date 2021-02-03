@@ -372,10 +372,27 @@ class GitHub::KVTest < Minitest::Test
     expires = Time.at(1.hour.from_now.to_i).utc
 
     @kv.set("foo-touch", "value", expires: expires)
-    
+
+    refute_nil @kv.ttl("foo-touch").value!
+
     @kv.touch("foo-touch")
 
     assert_nil @kv.ttl("foo-touch").value!
+    assert_equal "value", @kv.get("foo-touch").value!
+  end
+
+  def test_touch_uses_greatest_expiry
+    # the Time.at dance is necessary because MySQL does not support sub-second
+    # precision in DATETIME values
+    expires = Time.at(10.hour.from_now.to_i).utc
+
+    @kv.set("foo-touch", "value", expires: expires)
+
+    refute_nil @kv.ttl("foo-touch").value!
+
+    @kv.touch("foo-touch", expires: Time.at(1.hour.from_now.to_i).utc)
+
+    assert_equal expires, @kv.ttl("foo-touch").value!
     assert_equal "value", @kv.get("foo-touch").value!
   end
 

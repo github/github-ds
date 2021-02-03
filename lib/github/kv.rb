@@ -190,6 +190,7 @@ module GitHub
     #
     # Touches the specified key updating or clearing the expiry time without changing the value.
     # Does not create the key if it does not already exist.
+    # Will keep the existing timestamp if it is greater than expires.
     # Returns nil. Raises on error.
     #
     # Example:
@@ -207,6 +208,7 @@ module GitHub
     #
     # Touches the specified keys, updating or clearing the expiry time without changing the values.
     # Does not create the keys if they do not already exist.
+    # Will keep the existing timestamp if it is greater than expires.
     # Returns nil. Raises on error.
     #
     # Example:
@@ -225,7 +227,7 @@ module GitHub
         GitHub::SQL.run(<<-SQL, :keys => keys, :expires => expires || GitHub::SQL::NULL, :now => now, :connection => connection)
           UPDATE #{@table_name}
           SET updated_at = :now,
-              expires_at = :expires
+              expires_at = GREATEST(IFNULL(expires_at, :expires), :expires)
           WHERE `key` IN :keys
           AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
