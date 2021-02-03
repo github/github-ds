@@ -186,6 +186,54 @@ module GitHub
       nil
     end
 
+    # touch :: String, expires: Time? -> nil
+    #
+    # Touches the specified key updating or clearing the expiry time without changing the value.
+    # Does not create the key if it does not already exist.
+    # Returns nil. Raises on error.
+    #
+    # Example:
+    #
+    #   kv.touch("foo")
+    #     # => nil
+    #
+    def touch(key, expires: nil)
+      validate_key(key)
+
+      mtouch([ key ], expires: expires)
+    end
+
+    # mtouch :: [ String ], expires: Time? -> nil
+    #
+    # Touches the specified keys, updating or clearing the expiry time without changing the values.
+    # Does not create the keys if they do not already exist.
+    # Returns nil. Raises on error.
+    #
+    # Example:
+    #
+    #   kv.mtouch([ "foo" ])
+    #     # => nil
+    #
+    #   kv.mtouch([ "expires" ], expires: 1.hour.from_now)
+    #     # => nil
+    #
+    def mtouch(keys, expires: nil)
+      validate_key_array(keys)
+      validate_expires(expires) if expires
+
+      encapsulate_error do
+        GitHub::SQL.run(<<-SQL, :keys => keys, :expires => expires || GitHub::SQL::NULL, :now => now, :connection => connection)
+          UPDATE #{@table_name}
+          SET updated_at = :now,
+              expires_at = :expires
+          WHERE `key` IN :keys
+          AND (`expires_at` IS NULL OR `expires_at` > :now)
+        SQL
+      end
+
+      nil
+    end
+
     # exists :: String -> Result<Boolean>
     #
     # Checks for existence of the specified key.

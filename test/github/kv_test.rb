@@ -343,6 +343,55 @@ class GitHub::KVTest < Minitest::Test
     assert_equal "bar2", @kv.get("foo").value!
   end
 
+  def test_touch_for_key_that_does_not_exist
+    assert_nil @kv.ttl("foo-touch").value!
+
+    # the Time.at dance is necessary because MySQL does not support sub-second
+    # precision in DATETIME values
+    expires = Time.at(1.hour.from_now.to_i).utc
+    @kv.touch("foo-touch", expires: expires)
+
+    assert_nil @kv.ttl("foo-touch").value!
+  end
+
+  def test_touch
+    @kv.set("foo-touch", "value")
+
+    # the Time.at dance is necessary because MySQL does not support sub-second
+    # precision in DATETIME values
+    expires = Time.at(1.hour.from_now.to_i).utc
+    @kv.touch("foo-touch", expires: expires)
+
+    assert_equal expires, @kv.ttl("foo-touch").value!
+    assert_equal "value", @kv.get("foo-touch").value!
+  end
+
+  def test_touch_clears_expiry
+    # the Time.at dance is necessary because MySQL does not support sub-second
+    # precision in DATETIME values
+    expires = Time.at(1.hour.from_now.to_i).utc
+
+    @kv.set("foo-touch", "value", expires: expires)
+    
+    @kv.touch("foo-touch")
+
+    assert_nil @kv.ttl("foo-touch").value!
+    assert_equal "value", @kv.get("foo-touch").value!
+  end
+
+  def test_mtouch
+    @kv.mset({"foo-touch" => "foo-value", "bar-touch" => "bar-value"})
+
+    # the Time.at dance is necessary because MySQL does not support sub-second
+    # precision in DATETIME values
+    expires = Time.at(1.hour.from_now.to_i).utc
+    @kv.mtouch(["foo-touch"], expires: expires)
+
+    assert_equal [expires, nil], @kv.mttl(["foo-touch", "bar-touch"]).value!
+    assert_equal [nil, expires], @kv.mttl(["bar-touch", "foo-touch"]).value!
+    assert_equal ["foo-value", "bar-value"], @kv.mget(["foo-touch", "bar-touch"]).value!
+  end
+
   def test_ttl
     assert_nil @kv.ttl("foo-ttl").value!
 
