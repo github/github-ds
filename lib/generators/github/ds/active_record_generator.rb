@@ -6,6 +6,7 @@ module Github
       class ActiveRecordGenerator < ::Rails::Generators::Base
         class_option :migration_name, type: :string, default: "CreateKeyValuesTable"
         class_option :table_name, type: :string, default: ::GitHub::KV.config.table_name
+        class_option :case_sensitive, type: :boolean, default: false
 
         include ::Rails::Generators::Migration
         desc "Generates migration for KV table"
@@ -34,6 +35,9 @@ module Github
           self.class.migration_version
         end
 
+        def case_sensitive?
+          @options["case_sensitive"]
+        end
 
         def table_name
           @options["table_name"]

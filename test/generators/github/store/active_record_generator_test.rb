@@ -31,7 +31,8 @@ class CreateKeyValuesTable < ActiveRecord::Migration#{migration_version}
     add_index :#{table_name}, :key, :unique => true
     add_index :#{table_name}, :expires_at
 
-    change_column  :#{table_name}, :id, "bigint(20) NOT NULL AUTO_INCREMENT"
+    change_column :#{table_name}, :id, "bigint(20) NOT NULL AUTO_INCREMENT"
+
   end
 
   def self.down
@@ -42,11 +43,13 @@ EOM
   end
 
   def test_generate_with_arguments
-    run_generator %w(--migration-name CreateKVTest --table-name kvtest)
+    run_generator %w(--migration-name CreateKVTest --table-name kvtest --case-sensitive)
 
     assert_migration "db/migrate/create_kvtest_table.rb" do |migration|
       assert_match "class CreateKVTest <", migration
-      assert_match "create table :kvtest do", migration
+      assert_match "create_table :kvtest do", migration
+      assert_match %r(ALTER TABLE kvtest.*COLLATE utf8_bin), migration
+      assert_match %r(change_column.*:collate => "utf8_bin"), migration
     end
   end
 end

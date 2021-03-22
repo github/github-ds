@@ -10,9 +10,10 @@ class <%= migration_name %> < ActiveRecord::Migration<%= migration_version %>
     add_index :<%= table_name %>, :key, :unique => true
     add_index :<%= table_name %>, :expires_at
 
-    change_column  :<%= table_name %>, :id, "bigint(20) NOT NULL AUTO_INCREMENT"
-    <%- if false && case_sensitive? %>
-    change_column :<%= table_name %>, :key, " CHARACTER SET utf8 COLLATE utf8_bin"
+    change_column :<%= table_name %>, :id, "bigint(20) NOT NULL AUTO_INCREMENT"
+    <%- if case_sensitive? %>
+    execute "ALTER TABLE <%= table_name %> CHARACTER SET utf8 COLLATE utf8_bin"
+    change_column :<%= table_name %>, :key, :string, :null => false, :collate => "utf8_bin"
     <%- end %>
   end
 
