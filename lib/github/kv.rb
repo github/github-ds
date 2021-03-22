@@ -129,7 +129,8 @@ module GitHub
           SELECT `key`, value FROM #{@table_name} WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
 
-        keys.map { |key| kvs[key] }
+        kvs.keys.each { |key| kvs[key.downcase] = kvs[key] }
+        keys.map { |key| kvs[key.downcase] }
       }
     end
 
