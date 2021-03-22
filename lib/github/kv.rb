@@ -86,6 +86,7 @@ module GitHub
       @use_local_time = config.use_local_time
       @table_name = config.table_name
       @conn_block = conn_block
+      @case_sensitive = config.case_sensitive?
     end
 
     def connection
@@ -129,8 +130,12 @@ module GitHub
           SELECT `key`, value FROM #{@table_name} WHERE `key` IN :keys AND (`expires_at` IS NULL OR `expires_at` > :now)
         SQL
 
-        kvs.keys.each { |key| kvs[key.downcase] = kvs[key] }
-        keys.map { |key| kvs[key.downcase] }
+        if @case_sensitive
+          keys.map { |key| kvs[key] }
+        else
+          kvs.keys.each { |key| kvs[key.downcase] = kvs[key] }
+          keys.map { |key| kvs[key.downcase] }
+        end
       }
     end
 
