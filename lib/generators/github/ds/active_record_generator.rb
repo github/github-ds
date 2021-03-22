@@ -4,13 +4,16 @@ module Github
   module Ds
     module Generators
       class ActiveRecordGenerator < ::Rails::Generators::Base
+        class_option :migration_name, type: :string, default: "CreateKeyValuesTable"
+        class_option :table_name, type: :string, default: ::GitHub::KV.config.table_name
+
         include ::Rails::Generators::Migration
         desc "Generates migration for KV table"
 
         source_paths << File.join(File.dirname(__FILE__), "templates")
 
         def create_migration_file
-          migration_template "migration.rb", "db/migrate/create_key_values_table.rb", migration_version: migration_version
+          migration_template "migration.rb", "db/migrate/create_#{table_name}_table.rb", migration_version: migration_version
         end
 
         def self.next_migration_number(dirname)
@@ -23,16 +26,17 @@ module Github
           end
         end
 
+        def migration_name
+          @options["migration_name"]
+        end
+
         def migration_version
           self.class.migration_version
         end
 
-        def self.table_name
-          ":#{GitHub::KV.config.table_name}"
-        end
 
         def table_name
-          self.class.table_name
+          @options["table_name"]
         end
       end
     end
