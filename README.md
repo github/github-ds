@@ -37,9 +37,13 @@ rails generate github:ds:active_record
 rails db:migrate
 ```
 
-If you need to change the name of the table used for storing the key-values, you can configure your table name as such, before running the migration:
+If you need to change the name of the table used for storing the key-values, you can set your table name on the command line. Don't forget to configure your table name in the library, too:
 
 ```
+rails generate github:ds:active_record --table-name new_key_values_table
+```
+
+```ruby
 GitHub::KV.configure do |config|
   config.table_name = "new_key_values_table"
 end
@@ -94,7 +98,17 @@ pp kv.mdel(["foo", "bar"])
 # nil
 ```
 
-Note that due to MySQL's default collation, KV keys are case-insensitive.
+Due to MySQL's default collation, `GitHub::KV` keys are case-insensitive. If you require case sensitivity, you can set that when generating the migration and configuring the library:
+
+```
+rails generate github:ds:active_record --case-sensitive
+```
+
+```ruby
+GitHub::KV.configure do |config|
+  config.case_sensitive = true
+end
+```
 
 ### GitHub::SQL
 
