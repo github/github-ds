@@ -94,6 +94,8 @@ pp kv.mdel(["foo", "bar"])
 # nil
 ```
 
+Note that due to MySQL's default collation, KV keys are case-insensitive.
+
 ### GitHub::SQL
 
 ```ruby
