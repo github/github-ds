@@ -4,7 +4,6 @@ module Github
   module Ds
     module Generators
       class ActiveRecordGenerator < ::Rails::Generators::Base
-        class_option :migration_name, type: :string, default: "CreateKeyValuesTable"
         class_option :table_name, type: :string, default: ::GitHub::KV.config.table_name
         class_option :case_sensitive, type: :boolean, default: false
 
@@ -28,7 +27,7 @@ module Github
         end
 
         def migration_name
-          @options["migration_name"]
+          "create_#{table_name}_table".camelize
         end
 
         def migration_version

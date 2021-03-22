@@ -41,7 +41,7 @@ begin
   require "rails/generators"
   require "generators/github/ds/active_record_generator"
   Rails::Generators.invoke "github:ds:active_record"
-  Rails::Generators.invoke "github:ds:active_record", %w(--table-name kv_case_sensitive --migration-name CreateCaseSensitiveKV --case-sensitive)
+  Rails::Generators.invoke "github:ds:active_record", %w(--table-name kv_case_sensitive --case-sensitive)
 
   # require migration and run it so we have the key values table
   db_path.join("migrate").children.each do |migration|
@@ -49,7 +49,7 @@ begin
   end
   ActiveRecord::Migration.verbose = false
   CreateKeyValuesTable.up
-  CreateCaseSensitiveKV.up
+  CreateKvCaseSensitiveTable.up
 rescue
   raise if attempts >= 1
   ActiveRecord::Base.establish_connection :without_database

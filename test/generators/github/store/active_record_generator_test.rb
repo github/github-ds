@@ -43,10 +43,10 @@ EOM
   end
 
   def test_generate_with_arguments
-    run_generator %w(--migration-name CreateKVTest --table-name kvtest --case-sensitive)
+    run_generator %w(--table-name kv_test --case-sensitive)
 
     assert_migration "db/migrate/create_kvtest_table.rb" do |migration|
-      assert_match "class CreateKVTest <", migration
+      assert_match "class CreateKvTest <", migration
       assert_match "create_table :kvtest do", migration
       assert_match %r(ALTER TABLE kvtest.*COLLATE utf8_bin), migration
       assert_match %r(change_column.*:collate => "utf8_bin"), migration
