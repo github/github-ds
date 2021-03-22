@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 gemspec
 
-DEFAULT_RAILS_VERSION = '6.0.3'
+DEFAULT_RAILS_VERSION = '6.0.3.5'
 ENV['RAILS_VERSION'] ||= DEFAULT_RAILS_VERSION
 
 if ENV['RAILS_VERSION'] == '4.2.10'

@@ -4,13 +4,16 @@ module Github
   module Ds
     module Generators
       class ActiveRecordGenerator < ::Rails::Generators::Base
+        class_option :table_name, type: :string, default: ::GitHub::KV.config.table_name
+        class_option :case_sensitive, type: :boolean, default: false
+
         include ::Rails::Generators::Migration
         desc "Generates migration for KV table"
 
         source_paths << File.join(File.dirname(__FILE__), "templates")
 
         def create_migration_file
-          migration_template "migration.rb", "db/migrate/create_key_values_table.rb", migration_version: migration_version
+          migration_template "migration.rb", "db/migrate/create_#{table_name}_table.rb", migration_version: migration_version
         end
 
         def self.next_migration_number(dirname)
@@ -23,16 +26,20 @@ module Github
           end
         end
 
+        def migration_name
+          "create_#{table_name}_table".camelize
+        end
+
         def migration_version
           self.class.migration_version
         end
 
-        def self.table_name
-          ":#{GitHub::KV.config.table_name}"
+        def case_sensitive?
+          @options["case_sensitive"]
         end
 
         def table_name
-          self.class.table_name
+          @options["table_name"]
         end
       end
     end

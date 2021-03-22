@@ -3,7 +3,13 @@ require "test_helper"
 class GitHub::KVTest < Minitest::Test
   def setup
     ActiveRecord::Base.connection.execute("TRUNCATE `key_values`")
+    ActiveRecord::Base.connection.execute("TRUNCATE `kv_case_sensitive`")
     @kv = GitHub::KV.new { ActiveRecord::Base.connection }
+    case_sensitive = GitHub::KV::Config.new do |cfg|
+      cfg.case_sensitive = true
+      cfg.table_name = "kv_case_sensitive"
+    end
+    @kv_case_sensitive = GitHub::KV.new(config: case_sensitive) { ActiveRecord::Base.connection }
     GitHub::KV.reset
   end
 
@@ -59,6 +65,28 @@ class GitHub::KVTest < Minitest::Test
 
     assert_equal ["1", "2"], @kv.mget(["a", "b"]).value!
     assert_equal ["2", "1"], @kv.mget(["b", "a"]).value!
+  end
+
+  def test_get_and_set_case_insensitive
+    assert_nil @kv.get("foo").value!
+
+    @kv.set "foo", "lowercase"
+    assert_equal "lowercase", @kv.get("foo").value!
+    assert_equal "lowercase", @kv.get("FOO").value!
+
+    @kv.set "FOO", "uppercase"
+    assert_equal "uppercase", @kv.get("foo").value!
+    assert_equal "uppercase", @kv.get("FOO").value!
+  end
+
+  def test_get_and_set_case_insensitive
+    assert_nil @kv_case_sensitive.get("foo").value!
+    assert_nil @kv_case_sensitive.get("FOO").value!
+
+    @kv_case_sensitive.set "foo", "lowercase"
+    @kv_case_sensitive.set "FOO", "uppercase"
+    assert_equal "lowercase", @kv_case_sensitive.get("foo").value!
+    assert_equal "uppercase", @kv_case_sensitive.get("FOO").value!
   end
 
   def test_get_failure

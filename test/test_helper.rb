@@ -31,6 +31,7 @@ attempts = 0
 begin
   ActiveRecord::Base.establish_connection :with_database
   ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `key_values`")
+  ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `kv_case_sensitive`")
 
   # remove db tree if present so we can start fresh
   db_path = root_path.join("db")
@@ -40,11 +41,15 @@ begin
   require "rails/generators"
   require "generators/github/ds/active_record_generator"
   Rails::Generators.invoke "github:ds:active_record"
+  Rails::Generators.invoke "github:ds:active_record", %w(--table-name kv_case_sensitive --case-sensitive)
 
   # require migration and run it so we have the key values table
-  require db_path.join("migrate").children.first.to_s
+  db_path.join("migrate").children.each do |migration|
+    require migration
+  end
   ActiveRecord::Migration.verbose = false
   CreateKeyValuesTable.up
+  CreateKvCaseSensitiveTable.up
 rescue
   raise if attempts >= 1
   ActiveRecord::Base.establish_connection :without_database
