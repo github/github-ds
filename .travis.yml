@@ -8,7 +8,7 @@ rvm:
   - 2.7
 script: bundle exec rake
 env:
-  - RAILS_VERSION=6.0.3.1
+  - RAILS_VERSION=6.0.3.5
   - RAILS_VERSION=5.2.0
 services:
   - mysql
