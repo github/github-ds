@@ -61,6 +61,18 @@ class GitHub::KVTest < Minitest::Test
     assert_equal ["2", "1"], @kv.mget(["b", "a"]).value!
   end
 
+  def test_get_and_set_case_insensitive
+    assert_nil @kv.get("foo").value!
+
+    @kv.set "foo", "lowercase"
+    assert_equal "lowercase", @kv.get("foo").value!
+    assert_equal "lowercase", @kv.get("FOO").value!
+
+    @kv.set "FOO", "uppercase"
+    assert_equal "uppercase", @kv.get("foo").value!
+    assert_equal "uppercase", @kv.get("FOO").value!
+  end
+
   def test_get_failure
     ActiveRecord::Base.connection.stubs(:select_all).raises(Errno::ECONNRESET)
 
