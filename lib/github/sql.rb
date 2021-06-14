@@ -402,15 +402,25 @@ module GitHub
 
     # Private: Forces ActiveRecord's default timezone for duration of block.
     def enforce_timezone(&block)
+      on_rails_7 = ActiveRecord.respond_to?(:default_timezone)
       begin
         if @force_timezone
-          zone = ActiveRecord::Base.default_timezone
-          ActiveRecord::Base.default_timezone = @force_timezone
+          if on_rails_7
+            zone = ActiveRecord.default_timezone
+            ActiveRecord.default_timezone = @force_timezone
+          else
+            zone = ActiveRecord::Base.default_timezone
+            ActiveRecord::Base.default_timezone = @force_timezone
+          end
         end
 
         yield if block_given?
       ensure
-        ActiveRecord::Base.default_timezone = zone if @force_timezone
+        if on_rails_7
+          ActiveRecord.default_timezone = zone if @force_timezone
+        else
+          ActiveRecord::Base.default_timezone = zone if @force_timezone
+        end
       end
     end
   end
