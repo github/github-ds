@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push: {}
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: github_ds_test
+          MYSQL_ROOT_PASSWORD: ""
+        ports:
+          - "3306:3306"
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby-version: ['2.7', '3.0']
+        rails-version: ['7.0.0.alpha2', '6.1.0']
+    env:
+      RAILS_VERSION: ${{ matrix.rails-version }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@473e4d8fe5dd94ee328fdfca9f8c9c7afc9dae5e
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true
+    - name: Run tests
+      run: bundle exec rake
