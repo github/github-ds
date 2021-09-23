@@ -210,12 +210,7 @@ module GitHub
       return @models if defined? @models
       return [] if frozen?
 
-      # Use select_all to retrieve hashes for each row instead of arrays of values.
-      result_set = connection.
-        select_all(query, "#{klass.name} Load via #{self.class.name}")
-
-      # This is a private Rails API and should ideally not be used
-      @models = klass._load_from_sql(result_set)
+      @models = klass.find_by_sql(query)
 
       retrieve_found_row_count
       freeze
