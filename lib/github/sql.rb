@@ -381,7 +381,7 @@ module GitHub
 
       when DateTime, Time, Date
         enforce_timezone do
-          connection.quote value.to_s(:db)
+          connection.quote value.to_formatted_s(:db)
         end
 
       when true
