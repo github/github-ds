@@ -104,7 +104,7 @@ class GitHub::SQLTest < Minitest::Test
   def test_add_date
     now = Time.now.utc
     sql = GitHub::SQL.new ":now", :now => now
-    assert_equal "'#{now.to_s(:db)}'", sql.query
+    assert_equal "'#{now.to_formatted_s(:db)}'", sql.query
   end
 
   def test_bind
