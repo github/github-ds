@@ -311,7 +311,7 @@ module GitHub
 
     # Public: The number of affected rows for this connection.
     def affected_rows
-      @affected_rows || connection.raw_connection.affected_rows
+      @affected_rows || connection.try(:affected_rows) || connection.raw_connection.affected_rows
     end
 
     # Public: the number of rows found by the query.
