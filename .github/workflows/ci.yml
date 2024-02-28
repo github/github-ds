@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['2.7', '3.0']
+        ruby-version: ['2.7', '3.0', '3.3']
         rails-version: ['7.0.0.alpha2', '6.1.0']
     env:
       RAILS_VERSION: ${{ matrix.rails-version }}
