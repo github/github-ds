@@ -152,7 +152,7 @@ module GitHub
       @last_insert_id = nil
       @affected_rows  = nil
       @binds          = binds ? binds.dup : {}
-      @query          = ""
+      @query          = "".dup
       @connection     = @binds.delete :connection
       @force_timezone = @binds.delete :force_timezone
 
