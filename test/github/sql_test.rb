@@ -285,7 +285,7 @@ class GitHub::SQLTest < Minitest::Test
 
   def test_add_doesnt_modify_timezone_if_early_return_invoked
     begin
-      original_default_timezone = ActiveRecord::Base.default_timezone
+      original_default_timezone = get_default_timezone
       refute_nil original_default_timezone
 
       ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
@@ -300,16 +300,16 @@ class GitHub::SQLTest < Minitest::Test
       sql = GitHub::SQL.new("SELECT * FROM repositories WHERE id = ?", force_timezone: :local)
       sql.add nil, id: 1
 
-      assert_equal original_default_timezone, ActiveRecord::Base.default_timezone
+      assert_equal original_default_timezone, get_default_timezone
     ensure
-      ActiveRecord::Base.default_timezone = original_default_timezone
+      set_default_timezone = original_default_timezone
       ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
     end
   end
 
   def test_results_doesnt_modify_timezone_if_early_return_invoked
     begin
-      original_default_timezone = ActiveRecord::Base.default_timezone
+      original_default_timezone = get_default_timezone
       refute_nil original_default_timezone
 
       ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
@@ -325,11 +325,27 @@ class GitHub::SQLTest < Minitest::Test
       sql.results
       sql.results
 
-      assert_equal original_default_timezone, ActiveRecord::Base.default_timezone
+      assert_equal original_default_timezone, get_default_timezone
     ensure
-      ActiveRecord::Base.default_timezone = original_default_timezone
+      set_default_timezone original_default_timezone
       ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
     end
+  end
+
+  def get_default_timezone
+    if ActiveRecord.respond_to?(:default_timezone)
+      ActiveRecord
+    else
+      ActiveRecord::Base
+    end.default_timezone
+  end
+
+  def set_default_timezone(value)
+    if ActiveRecord.respond_to?(:default_timezone)
+      ActiveRecord
+    else
+      ActiveRecord::Base
+    end.default_timezone = (value)
   end
 end
 
