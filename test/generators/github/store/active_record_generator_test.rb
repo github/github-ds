@@ -1,6 +1,5 @@
 require "test_helper"
 require "rails"
-require "rails/test_help"
 require "active_record"
 require "rails/generators/test_case"
 require "generators/github/ds/active_record_generator"
