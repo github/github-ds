@@ -302,7 +302,7 @@ class GitHub::SQLTest < Minitest::Test
 
       assert_equal original_default_timezone, get_default_timezone
     ensure
-      set_default_timezone = original_default_timezone
+      set_default_timezone original_default_timezone
       ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS `repositories`")
     end
   end
