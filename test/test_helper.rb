@@ -1,15 +1,12 @@
-require "bundler/setup"
-require "pp"
+
 require "pathname"
 root_path = Pathname(File.expand_path("../..", __FILE__))
-$LOAD_PATH.unshift root_path.join("lib").to_s
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "github/ds"
 require "github/kv"
 require "timecop"
 require "minitest/autorun"
-require "mocha/mini_test"
-require "minitest/focus"
-require "pry"
+require "mocha/minitest"
 
 ActiveRecord::Base.configurations = {
   "without_database" => {
