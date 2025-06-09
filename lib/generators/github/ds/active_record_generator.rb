@@ -10,7 +10,7 @@ module Github
         source_paths << File.join(File.dirname(__FILE__), "templates")
 
         def create_migration_file
-          migration_template "migration.rb", "db/migrate/create_key_values_table.rb", migration_version: migration_version
+          migration_template "migration.rb.tt", "db/migrate/create_key_values_table.rb", migration_version: migration_version
         end
 
         def self.next_migration_number(dirname)
