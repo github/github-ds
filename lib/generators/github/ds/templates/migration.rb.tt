@@ -12,6 +12,6 @@ class CreateKeyValuesTable < ActiveRecord::Migration<%= migration_version %>
   end
 
   def self.down
-    drop_table  <%= table_name %>
+    drop_table <%= table_name %>
   end
 end
